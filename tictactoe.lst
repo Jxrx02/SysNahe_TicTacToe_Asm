@@ -1,0 +1,388 @@
+tictactoe                                                                                                               PAGE 1
+                         1     ;-------------------------------------------------
+                         2     ;TicTacToe, 2 Spieler
+                         3     ; Eingabe: Matrix-Keypad an P0 (P0.0-P0.3, für 9 Felder), Eingabe bestätigen P0.7 ; Wertebereich: [1-
+                         4     ; Ausgabe: 8x8-LED-Matrix an P1, P2
+                         5     ;
+                         6     ; -------------------------------------------------
+                         7     ;-----------------------------------------------------------------------
+                         8     ; Voreingestellungen
+                         9     ;-----------------------------------------------------------------------
+                        10     ORG 0H   ; Startadresse des Programms
+0000 759000             11     MOV P1, #00H  ; Konfiguriere Port 1 als Ausgangsport für LED-Matrix
+0003 75A000             12     MOV P2, #00H  ; Konfiguriere Port 2 als Ausgangsport für LED-Matrix
+                        13
+                        14     ;-----------------------------------------------------------------------
+                        15     ; Logik
+                        16     ;-----------------------------------------------------------------------
+                        17
+0006 120009             18     call INIT_BOARD
+                        19     INIT_BOARD:
+0009 7F00               20             mov r7, #00000000b      ;00 0 00 0 10
+                        21                                     ;00 0 00 0 10           wenn x < 3 -> R7
+                        22                                     ;00 0 00 0 00
+000B 7E00               23             mov r6, #00000000b      ;11 0 10 0 00
+                        24                                     ;11 0 10 0 00           wenn x < 6 -> R6
+                        25                                     ;00 0 00 0 00
+000D 7D00               26             mov r5, #00000000b      ;11 0 00 0 00
+                        27                                     ;11 0 00 0 00           sonst R5
+                        28
+                        29
+000F 120012             30     call MAIN_LOOP
+                        31     MAIN_LOOP:
+                        32             ;-----------------------------------------------------------------------
+                        33                 ; ON_INPUT: Wird P0.7 betätigt, so wird Port P0 (P0.0-P0.3) eingelesen -> liefert Dezimal
+                        34             ;-----------------------------------------------------------------------
+0012 208705             35             JB P0.7, ON_INPUT
+                        36
+                        37
+0015 120073             38             call DISPLAY_BOARD
+0018 80F8               39             JMP MAIN_LOOP
+                        40
+                        41
+                        42     ON_INPUT:
+001A E580               43             MOV a, P0
+001C 540F               44             ANL a, #00FH ; bitweise &-Verknüpfung, um nur die letzten 4 Bits (P0.0-P0.3) auszuwerten
+001E F8                 45             MOV R0, a
+                        46             ;-----------------------------------------------------------------------
+                        47                 ; Mappe Feld auf 8x8 Matrix
+                        48                 ; => R0 enthält den Wert des zu setztenden Feldes
+                        49             ;-----------------------------------------------------------------------
+                        50             ; x < 3
+001F 9403               51             SUBB A, #03h; Idee: 1-2 = -1 > -2 <=>  a<b
+0021 400E               52             JC LESS_THAN_3 ; x<3 -> schreibe in R7
+0023 600C               53             JZ LESS_THAN_3
+                        54
+                        55             ; 3 < x < 6
+0025 9403               56             SUBB A, #03h
+0027 401E               57             JC LESS_THAN_6 ; x<6 -> schreibe in R6
+0029 601C               58             JZ LESS_THAN_6
+                        59             ; 6< x < 9
+002B 9403               60             SUBB A, #03h
+002D 402E               61             JC LESS_THAN_9 ; x<6 -> schreibe in R6
+002F 602C               62             JZ LESS_THAN_9
+                        63
+                        64             ; x < 3
+                        65             LESS_THAN_3:
+0031 FA                 66                     MOV R2, A; register für zähler der foor loop
+0032 7403               67                     MOV A, #00000011b
+0034 CA                 68                     xch A,R2                ; dopppelte Vertauschung notwendig!!
+0035 10D705             69                     JBC C,SUM_LOOP_3
+                        70
+                        71                     JoaNhBinZuUnkreativ1:
+0038 CA                 72                             xch A,R2                ;tausche A mit R2
+0039 4F                 73                             ORL A, R7               ;schreibe wert in TicTacToeFeld mit |-Verknüpfung
+003A FF                 74                             MOV R7, A               ;speichere Wert in Register zwischen
+003B 80D5               75                             JMP MAIN_LOOP
+                        76
+                        77             SUM_LOOP_3:
+003D CA                 78                     xch A,R2
+003E 0A                 79                     INC R2                  ; Inkrementiere den Zählerwert für die nächste Iteration
+003F 23                 80                     RL A            ;rotiere akku um 3 Stellen je übertrag
+0040 23                 81                     RL A
+0041 23                 82                     RL A
+0042 CA                 83                     xch A,R2                ;tausche A(kku) mit R2
+0043 70F8               84                     JNZ SUM_LOOP_3          ; springe zurück zur Schleife, wenn r2 != 0
+0045 60F1               85                     JZ JoaNhBinZuUnkreativ1
+                        86
+                        87             ;-----------------------------------------------------------------------
+                        88             ; 3 < x < 6
+                        89             LESS_THAN_6:
+0047 FA                 90                     MOV R2, A; register für zähler der foor loop
+0048 7403               91                     MOV A, #00000011b
+004A CA                 92                     xch A,R2                ; dopppelte Vertauschung notwendig!!
+004B 10D705             93                     JBC C,SUM_LOOP_6
+                        94
+                        95                     JoaNhBinZuUnkreativ2:
+004E CA                 96                             xch A,R2                ;tausche A mit R2
+004F 4E                 97                             ORL A, R6               ;schreibe wert in TicTacToeFeld mit |-Verknüpfung
+0050 FE                 98                             MOV R6, A               ;speichere Wert in Register zwischen
+0051 80BF               99                             JMP MAIN_LOOP
+                       100
+                       101             SUM_LOOP_6:
+0053 CA                102                     xch A,R2
+0054 0A                103                     INC R2                  ; Inkrementiere den Zählerwert für die nächste Iteration
+0055 23                104                     RL A            ;rotiere akku um 3 Stellen je übertrag
+0056 23                105                     RL A
+0057 23                106                     RL A
+0058 CA                107                     xch A,R2                ;tausche A(kku) mit R2
+0059 70F8              108                     JNZ SUM_LOOP_6          ; springe zurück zur Schleife, wenn r2 != 0
+005B 60F1              109                     JZ JoaNhBinZuUnkreativ2
+                       110
+                       111
+                       112
+                       113             ;-----------------------------------------------------------------------
+                       114             ; 6< x < 9
+                       115             LESS_THAN_9:
+005D FA                116                     MOV R2, A; register für zähler der foor loop
+005E 7403              117                     MOV A, #00000011b
+0060 CA                118                     xch A,R2                ; dopppelte Vertauschung notwendig!!
+0061 10D705            119                     JBC C,SUM_LOOP_9
+                       120
+                       121                     JoaNhBinZuUnkreativ3:
+0064 CA                122                             xch A,R2                ;tausche A mit R2
+0065 4D                123                             ORL A, R5               ;schreibe wert in TicTacToeFeld mit |-Verknüpfung
+0066 FD                124                             MOV R5, A               ;speichere Wert in Register zwischen
+0067 80A9              125                             JMP MAIN_LOOP
+                       126
+                       127             SUM_LOOP_9:
+0069 CA                128                     xch A,R2
+006A 0A                129                     INC R2                  ; Inkrementiere den Zählerwert für die nächste Iteration
+006B 23                130                     RL A            ;rotiere akku um 3 Stellen je übertrag
+006C 23                131                     RL A
+006D 23                132                     RL A
+006E CA                133                     xch A,R2                ;tausche A(kku) mit R2
+006F 70F8              134                     JNZ SUM_LOOP_9          ; springe zurück zur Schleife, wenn r2 != 0
+0071 60F1              135                     JZ JoaNhBinZuUnkreativ3
+                       136
+                       137
+                       138
+                       139
+                       140
+                       141     DISPLAY_BOARD:
+                       142             ;-----------------------------------------------------------------------
+                       143                 ; Zeige R7,R6,R5 nacheinander gemultiplext an
+                       144                 ; R7, R6, R5 spiegeln das Feld wider, x die Eingabe aus R0 von Funktion ON_INPUT (Wird au
+                       145             ;-----------------------------------------------------------------------
+                       146
+                       147
+                       148
+0073 759000            149             MOV P1, #00000000b ;setze p1 standardgemäß auf 0
+                       150             ;display0:
+0076 8FA0              151                     MOV P2, R7
+0078 D290              152                     setb P1.0
+007A 109000            153                     JBC P1.0,display1
+                       154             display1:
+                       155                     ;MOV P2, R7
+007D D291              156                     setb P1.1
+007F 109100            157                     JBC P1.1,display2
+                       158             display2:
+0082 75A000            159                     MOV P2, #00000000b
+0085 D292              160                     setb P1.2
+0087 109200            161                     JBC P1.2,display3
+008A 8EA0              162             display3: MOV P2, R6
+008C D293              163                     setb P1.3
+008E 109300            164                     JBC P1.3,display4
+                       165             display4:
+0091 D294              166                     setb P1.4
+0093 109400            167                     JBC P1.4,display5
+                       168             display5:
+0096 75A000            169                     MOV P2, #00000000b
+0099 D295              170                     setb P1.5
+009B 109500            171                     JBC P1.5,display6
+                       172             display6:
+009E 8DA0              173                     MOV P2, R5
+00A0 D296              174                     setb P1.6
+00A2 109600            175                     JBC P1.6,display7
+                       176             display7:
+00A5 D297              177                     setb P1.7
+                       178                     ;MOV P1, #00000000b ;setze p1 standardgemäß auf 0
+00A7 1112              179                     call main_loop
+                       180
+                       181
+                       182
+                       183     END
+ASSEMBLY COMPLETE, NO ERRORS FOUND, NO WARNINGS
+
+
+SYMBOL TABLE:
+??MCU_8051_IDE . . . . . . . . . . .  N  NUMB  8051H  NOT USED
+??VERSION. . . . . . . . . . . . . .  N  NUMB  0149H  NOT USED
+AC . . . . . . . . . . . . . . . . .  B  ADDR  00D6H  NOT USED
+ACC. . . . . . . . . . . . . . . . .  D  ADDR  00E0H  NOT USED
+ACSR . . . . . . . . . . . . . . . .  D  ADDR  0097H  NOT USED
+ADCF . . . . . . . . . . . . . . . .  D  ADDR  00F6H  NOT USED
+ADCLK. . . . . . . . . . . . . . . .  D  ADDR  00F2H  NOT USED
+ADCON. . . . . . . . . . . . . . . .  D  ADDR  00F3H  NOT USED
+ADDH . . . . . . . . . . . . . . . .  D  ADDR  00F5H  NOT USED
+ADDL . . . . . . . . . . . . . . . .  D  ADDR  00F4H  NOT USED
+AUXR . . . . . . . . . . . . . . . .  D  ADDR  008EH  NOT USED
+AUXR1. . . . . . . . . . . . . . . .  D  ADDR  00A2H  NOT USED
+B. . . . . . . . . . . . . . . . . .  D  ADDR  00F0H  NOT USED
+BDRCON . . . . . . . . . . . . . . .  D  ADDR  009BH  NOT USED
+BDRCON_1 . . . . . . . . . . . . . .  D  ADDR  009CH  NOT USED
+BRL. . . . . . . . . . . . . . . . .  D  ADDR  009AH  NOT USED
+CCAP0H . . . . . . . . . . . . . . .  D  ADDR  00FAH  NOT USED
+CCAP0L . . . . . . . . . . . . . . .  D  ADDR  00EAH  NOT USED
+CCAP1H . . . . . . . . . . . . . . .  D  ADDR  00FBH  NOT USED
+CCAP1L . . . . . . . . . . . . . . .  D  ADDR  00EBH  NOT USED
+CCAP2H . . . . . . . . . . . . . . .  D  ADDR  00FCH  NOT USED
+CCAP3H . . . . . . . . . . . . . . .  D  ADDR  00FDH  NOT USED
+CCAP4H . . . . . . . . . . . . . . .  D  ADDR  00FEH  NOT USED
+CCAPL2H. . . . . . . . . . . . . . .  D  ADDR  00FCH  NOT USED
+CCAPL2L. . . . . . . . . . . . . . .  D  ADDR  00ECH  NOT USED
+CCAPL3H. . . . . . . . . . . . . . .  D  ADDR  00FDH  NOT USED
+CCAPL3L. . . . . . . . . . . . . . .  D  ADDR  00EDH  NOT USED
+CCAPL4H. . . . . . . . . . . . . . .  D  ADDR  00FEH  NOT USED
+CCAPL4L. . . . . . . . . . . . . . .  D  ADDR  00EEH  NOT USED
+CCAPM0 . . . . . . . . . . . . . . .  D  ADDR  00DAH  NOT USED
+CCAPM1 . . . . . . . . . . . . . . .  D  ADDR  00DBH  NOT USED
+CCAPM2 . . . . . . . . . . . . . . .  D  ADDR  00DCH  NOT USED
+CCAPM3 . . . . . . . . . . . . . . .  D  ADDR  00DDH  NOT USED
+CCAPM4 . . . . . . . . . . . . . . .  D  ADDR  00DEH  NOT USED
+CCF0 . . . . . . . . . . . . . . . .  B  ADDR  00D8H  NOT USED
+CCF1 . . . . . . . . . . . . . . . .  B  ADDR  00D9H  NOT USED
+CCF2 . . . . . . . . . . . . . . . .  B  ADDR  00DAH  NOT USED
+CCF3 . . . . . . . . . . . . . . . .  B  ADDR  00DBH  NOT USED
+CCF4 . . . . . . . . . . . . . . . .  B  ADDR  00DCH  NOT USED
+CCON . . . . . . . . . . . . . . . .  D  ADDR  00D8H  NOT USED
+CFINT. . . . . . . . . . . . . . . .  C  ADDR  0033H  NOT USED
+CH . . . . . . . . . . . . . . . . .  D  ADDR  00F9H  NOT USED
+CKCON. . . . . . . . . . . . . . . .  D  ADDR  008FH  NOT USED
+CKCON0 . . . . . . . . . . . . . . .  D  ADDR  008FH  NOT USED
+CKRL . . . . . . . . . . . . . . . .  D  ADDR  0097H  NOT USED
+CKSEL. . . . . . . . . . . . . . . .  D  ADDR  0085H  NOT USED
+CL . . . . . . . . . . . . . . . . .  D  ADDR  00E9H  NOT USED
+CLKREG . . . . . . . . . . . . . . .  D  ADDR  008FH  NOT USED
+CMOD . . . . . . . . . . . . . . . .  D  ADDR  00D9H  NOT USED
+CPRL2. . . . . . . . . . . . . . . .  B  ADDR  00C8H  NOT USED
+CR . . . . . . . . . . . . . . . . .  B  ADDR  00DEH  NOT USED
+CT2. . . . . . . . . . . . . . . . .  B  ADDR  00C9H  NOT USED
+CY . . . . . . . . . . . . . . . . .  B  ADDR  00D7H  NOT USED
+DISPLAY1 . . . . . . . . . . . . . .  C  ADDR  007DH
+DISPLAY2 . . . . . . . . . . . . . .  C  ADDR  0082H
+DISPLAY3 . . . . . . . . . . . . . .  C  ADDR  008AH
+DISPLAY4 . . . . . . . . . . . . . .  C  ADDR  0091H
+DISPLAY5 . . . . . . . . . . . . . .  C  ADDR  0096H
+DISPLAY6 . . . . . . . . . . . . . .  C  ADDR  009EH
+DISPLAY7 . . . . . . . . . . . . . .  C  ADDR  00A5H
+DISPLAY_BOARD. . . . . . . . . . . .  C  ADDR  0073H
+DP0H . . . . . . . . . . . . . . . .  D  ADDR  0083H  NOT USED
+DP0L . . . . . . . . . . . . . . . .  D  ADDR  0082H  NOT USED
+DP1H . . . . . . . . . . . . . . . .  D  ADDR  0085H  NOT USED
+DP1L . . . . . . . . . . . . . . . .  D  ADDR  0084H  NOT USED
+DPH. . . . . . . . . . . . . . . . .  D  ADDR  0083H  NOT USED
+DPL. . . . . . . . . . . . . . . . .  D  ADDR  0082H  NOT USED
+EA . . . . . . . . . . . . . . . . .  B  ADDR  00AFH  NOT USED
+EC . . . . . . . . . . . . . . . . .  B  ADDR  00AEH  NOT USED
+EECON. . . . . . . . . . . . . . . .  D  ADDR  0096H  NOT USED
+ES . . . . . . . . . . . . . . . . .  B  ADDR  00ACH  NOT USED
+ET0. . . . . . . . . . . . . . . . .  B  ADDR  00A9H  NOT USED
+ET1. . . . . . . . . . . . . . . . .  B  ADDR  00ABH  NOT USED
+ET2. . . . . . . . . . . . . . . . .  B  ADDR  00ADH  NOT USED
+EX0. . . . . . . . . . . . . . . . .  B  ADDR  00A8H  NOT USED
+EX1. . . . . . . . . . . . . . . . .  B  ADDR  00AAH  NOT USED
+EXEN2. . . . . . . . . . . . . . . .  B  ADDR  00CBH  NOT USED
+EXF2 . . . . . . . . . . . . . . . .  B  ADDR  00CEH  NOT USED
+EXTI0. . . . . . . . . . . . . . . .  C  ADDR  0003H  NOT USED
+EXTI1. . . . . . . . . . . . . . . .  C  ADDR  0013H  NOT USED
+F0 . . . . . . . . . . . . . . . . .  B  ADDR  00D5H  NOT USED
+FE . . . . . . . . . . . . . . . . .  B  ADDR  009FH  NOT USED
+IE . . . . . . . . . . . . . . . . .  D  ADDR  00A8H  NOT USED
+IE0. . . . . . . . . . . . . . . . .  B  ADDR  0089H  NOT USED
+IE1. . . . . . . . . . . . . . . . .  B  ADDR  008BH  NOT USED
+INIT_BOARD . . . . . . . . . . . . .  C  ADDR  0009H
+INT0 . . . . . . . . . . . . . . . .  B  ADDR  00B2H  NOT USED
+INT1 . . . . . . . . . . . . . . . .  B  ADDR  00B3H  NOT USED
+IP . . . . . . . . . . . . . . . . .  D  ADDR  00B8H  NOT USED
+IPH. . . . . . . . . . . . . . . . .  D  ADDR  00B7H  NOT USED
+IPH0 . . . . . . . . . . . . . . . .  D  ADDR  00B7H  NOT USED
+IPH1 . . . . . . . . . . . . . . . .  D  ADDR  00B3H  NOT USED
+IPL0 . . . . . . . . . . . . . . . .  D  ADDR  00B8H  NOT USED
+IPL1 . . . . . . . . . . . . . . . .  D  ADDR  00B2H  NOT USED
+IT0. . . . . . . . . . . . . . . . .  B  ADDR  0088H  NOT USED
+IT1. . . . . . . . . . . . . . . . .  B  ADDR  008AH  NOT USED
+JOANHBINZUUNKREATIV1 . . . . . . . .  C  ADDR  0038H
+JOANHBINZUUNKREATIV2 . . . . . . . .  C  ADDR  004EH
+JOANHBINZUUNKREATIV3 . . . . . . . .  C  ADDR  0064H
+KBE. . . . . . . . . . . . . . . . .  D  ADDR  009DH  NOT USED
+KBF. . . . . . . . . . . . . . . . .  D  ADDR  009EH  NOT USED
+KBLS . . . . . . . . . . . . . . . .  D  ADDR  009CH  NOT USED
+LESS_THAN_3. . . . . . . . . . . . .  C  ADDR  0031H
+LESS_THAN_6. . . . . . . . . . . . .  C  ADDR  0047H
+LESS_THAN_9. . . . . . . . . . . . .  C  ADDR  005DH
+MAIN_LOOP. . . . . . . . . . . . . .  C  ADDR  0012H
+ON_INPUT . . . . . . . . . . . . . .  C  ADDR  001AH
+OSCCON . . . . . . . . . . . . . . .  D  ADDR  0086H  NOT USED
+OV . . . . . . . . . . . . . . . . .  B  ADDR  00D2H  NOT USED
+P. . . . . . . . . . . . . . . . . .  B  ADDR  00D0H  NOT USED
+P0 . . . . . . . . . . . . . . . . .  D  ADDR  0080H
+P1 . . . . . . . . . . . . . . . . .  D  ADDR  0090H
+P1M1 . . . . . . . . . . . . . . . .  D  ADDR  00D4H  NOT USED
+P1M2 . . . . . . . . . . . . . . . .  D  ADDR  00E2H  NOT USED
+P2 . . . . . . . . . . . . . . . . .  D  ADDR  00A0H
+P3 . . . . . . . . . . . . . . . . .  D  ADDR  00B0H  NOT USED
+P3M1 . . . . . . . . . . . . . . . .  D  ADDR  00D5H  NOT USED
+P3M2 . . . . . . . . . . . . . . . .  D  ADDR  00E3H  NOT USED
+P4 . . . . . . . . . . . . . . . . .  D  ADDR  00C0H  NOT USED
+P4M1 . . . . . . . . . . . . . . . .  D  ADDR  00D6H  NOT USED
+P4M2 . . . . . . . . . . . . . . . .  D  ADDR  00E4H  NOT USED
+P5 . . . . . . . . . . . . . . . . .  D  ADDR  00E8H  NOT USED
+PC . . . . . . . . . . . . . . . . .  B  ADDR  00BEH  NOT USED
+PCON . . . . . . . . . . . . . . . .  D  ADDR  0087H  NOT USED
+PPCL . . . . . . . . . . . . . . . .  B  ADDR  00BEH  NOT USED
+PS . . . . . . . . . . . . . . . . .  B  ADDR  00BCH  NOT USED
+PSL. . . . . . . . . . . . . . . . .  B  ADDR  00BCH  NOT USED
+PSW. . . . . . . . . . . . . . . . .  D  ADDR  00D0H  NOT USED
+PT0. . . . . . . . . . . . . . . . .  B  ADDR  00B9H  NOT USED
+PT0L . . . . . . . . . . . . . . . .  B  ADDR  00B9H  NOT USED
+PT1. . . . . . . . . . . . . . . . .  B  ADDR  00BBH  NOT USED
+PT1L . . . . . . . . . . . . . . . .  B  ADDR  00BBH  NOT USED
+PT2. . . . . . . . . . . . . . . . .  B  ADDR  00BDH  NOT USED
+PT2L . . . . . . . . . . . . . . . .  B  ADDR  00BDH  NOT USED
+PX0. . . . . . . . . . . . . . . . .  B  ADDR  00B8H  NOT USED
+PX0L . . . . . . . . . . . . . . . .  B  ADDR  00B8H  NOT USED
+PX1. . . . . . . . . . . . . . . . .  B  ADDR  00BAH  NOT USED
+PX1L . . . . . . . . . . . . . . . .  B  ADDR  00BAH  NOT USED
+RB8. . . . . . . . . . . . . . . . .  B  ADDR  009AH  NOT USED
+RCAP2H . . . . . . . . . . . . . . .  D  ADDR  00CBH  NOT USED
+RCAP2L . . . . . . . . . . . . . . .  D  ADDR  00CAH  NOT USED
+RCLK . . . . . . . . . . . . . . . .  B  ADDR  00CDH  NOT USED
+RD . . . . . . . . . . . . . . . . .  B  ADDR  00B7H  NOT USED
+REN. . . . . . . . . . . . . . . . .  B  ADDR  009CH  NOT USED
+RESET. . . . . . . . . . . . . . . .  C  ADDR  0000H  NOT USED
+RI . . . . . . . . . . . . . . . . .  B  ADDR  0098H  NOT USED
+RS0. . . . . . . . . . . . . . . . .  B  ADDR  00D3H  NOT USED
+RS1. . . . . . . . . . . . . . . . .  B  ADDR  00D4H  NOT USED
+RXD. . . . . . . . . . . . . . . . .  B  ADDR  00B0H  NOT USED
+SADDR. . . . . . . . . . . . . . . .  D  ADDR  00A9H  NOT USED
+SADDR_0. . . . . . . . . . . . . . .  D  ADDR  00A9H  NOT USED
+SADDR_1. . . . . . . . . . . . . . .  D  ADDR  00AAH  NOT USED
+SADEN. . . . . . . . . . . . . . . .  D  ADDR  00B9H  NOT USED
+SADEN_0. . . . . . . . . . . . . . .  D  ADDR  00B9H  NOT USED
+SADEN_1. . . . . . . . . . . . . . .  D  ADDR  00BAH  NOT USED
+SBUF . . . . . . . . . . . . . . . .  D  ADDR  0099H  NOT USED
+SCON . . . . . . . . . . . . . . . .  D  ADDR  0098H  NOT USED
+SINT . . . . . . . . . . . . . . . .  C  ADDR  0023H  NOT USED
+SM0. . . . . . . . . . . . . . . . .  B  ADDR  009FH  NOT USED
+SM1. . . . . . . . . . . . . . . . .  B  ADDR  009EH  NOT USED
+SM2. . . . . . . . . . . . . . . . .  B  ADDR  009DH  NOT USED
+SP . . . . . . . . . . . . . . . . .  D  ADDR  0081H  NOT USED
+SPCON. . . . . . . . . . . . . . . .  D  ADDR  00C3H  NOT USED
+SPCR . . . . . . . . . . . . . . . .  D  ADDR  00D5H  NOT USED
+SPDAT. . . . . . . . . . . . . . . .  D  ADDR  00C5H  NOT USED
+SPDR . . . . . . . . . . . . . . . .  D  ADDR  0086H  NOT USED
+SPSR . . . . . . . . . . . . . . . .  D  ADDR  00AAH  NOT USED
+SPSTA. . . . . . . . . . . . . . . .  D  ADDR  00C4H  NOT USED
+SUM_LOOP_3 . . . . . . . . . . . . .  C  ADDR  003DH
+SUM_LOOP_6 . . . . . . . . . . . . .  C  ADDR  0053H
+SUM_LOOP_9 . . . . . . . . . . . . .  C  ADDR  0069H
+T0 . . . . . . . . . . . . . . . . .  B  ADDR  00B4H  NOT USED
+T1 . . . . . . . . . . . . . . . . .  B  ADDR  00B5H  NOT USED
+T2CON. . . . . . . . . . . . . . . .  D  ADDR  00C8H  NOT USED
+T2MOD. . . . . . . . . . . . . . . .  D  ADDR  00C9H  NOT USED
+TB8. . . . . . . . . . . . . . . . .  B  ADDR  009BH  NOT USED
+TCLK . . . . . . . . . . . . . . . .  B  ADDR  00CCH  NOT USED
+TCON . . . . . . . . . . . . . . . .  D  ADDR  0088H  NOT USED
+TF0. . . . . . . . . . . . . . . . .  B  ADDR  008DH  NOT USED
+TF1. . . . . . . . . . . . . . . . .  B  ADDR  008FH  NOT USED
+TF2. . . . . . . . . . . . . . . . .  B  ADDR  00CFH  NOT USED
+TH0. . . . . . . . . . . . . . . . .  D  ADDR  008CH  NOT USED
+TH1. . . . . . . . . . . . . . . . .  D  ADDR  008DH  NOT USED
+TH2. . . . . . . . . . . . . . . . .  D  ADDR  00CDH  NOT USED
+TI . . . . . . . . . . . . . . . . .  B  ADDR  0099H  NOT USED
+TIMER0 . . . . . . . . . . . . . . .  C  ADDR  000BH  NOT USED
+TIMER1 . . . . . . . . . . . . . . .  C  ADDR  001BH  NOT USED
+TIMER2 . . . . . . . . . . . . . . .  C  ADDR  002BH  NOT USED
+TL0. . . . . . . . . . . . . . . . .  D  ADDR  008AH  NOT USED
+TL1. . . . . . . . . . . . . . . . .  D  ADDR  008BH  NOT USED
+TL2. . . . . . . . . . . . . . . . .  D  ADDR  00CCH  NOT USED
+TMOD . . . . . . . . . . . . . . . .  D  ADDR  0089H  NOT USED
+TR0. . . . . . . . . . . . . . . . .  B  ADDR  008CH  NOT USED
+TR1. . . . . . . . . . . . . . . . .  B  ADDR  008EH  NOT USED
+TR2. . . . . . . . . . . . . . . . .  B  ADDR  00CAH  NOT USED
+TXD. . . . . . . . . . . . . . . . .  B  ADDR  00B1H  NOT USED
+WDTCON . . . . . . . . . . . . . . .  D  ADDR  00A7H  NOT USED
+WDTPRG . . . . . . . . . . . . . . .  D  ADDR  00A7H  NOT USED
+WDTRST . . . . . . . . . . . . . . .  D  ADDR  00A6H  NOT USED
+WR . . . . . . . . . . . . . . . . .  B  ADDR  00B6H  NOT USED
