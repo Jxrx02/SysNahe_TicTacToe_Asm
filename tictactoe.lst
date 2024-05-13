@@ -49,7 +49,7 @@ tictactoe                                                                       
                         48                 ; => R0 enthält den Wert des zu setztenden Feldes
                         49             ;-----------------------------------------------------------------------
                         50             ; x < 3
-001F 9403               51             SUBB A, #03h; Idee: 1-2 = -1 > -2 <=>  a<b
+001F 9403               51             SUBB A, #03h; Idee: 8-3 >0; 5-3>0; 2-3 = -1 Setze Carry oder wenn akku leer, springe auf schl
 0021 400E               52             JC LESS_THAN_3 ; x<3 -> schreibe in R7
 0023 600C               53             JZ LESS_THAN_3
                         54
@@ -88,25 +88,25 @@ tictactoe                                                                       
                         87             ;-----------------------------------------------------------------------
                         88             ; 3 < x < 6
                         89             LESS_THAN_6:
-0047 FA                 90                     MOV R2, A; register für zähler der foor loop
+0047 FA                 90                     MOV R2, A
 0048 7403               91                     MOV A, #00000011b
-004A CA                 92                     xch A,R2                ; dopppelte Vertauschung notwendig!!
+004A CA                 92                     xch A,R2
 004B 10D705             93                     JBC C,SUM_LOOP_6
                         94
                         95                     JoaNhBinZuUnkreativ2:
-004E CA                 96                             xch A,R2                ;tausche A mit R2
-004F 4E                 97                             ORL A, R6               ;schreibe wert in TicTacToeFeld mit |-Verknüpfung
-0050 FE                 98                             MOV R6, A               ;speichere Wert in Register zwischen
+004E CA                 96                             xch A,R2
+004F 4E                 97                             ORL A, R6
+0050 FE                 98                             MOV R6, A
 0051 80BF               99                             JMP MAIN_LOOP
                        100
                        101             SUM_LOOP_6:
 0053 CA                102                     xch A,R2
-0054 0A                103                     INC R2                  ; Inkrementiere den Zählerwert für die nächste Iteration
-0055 23                104                     RL A            ;rotiere akku um 3 Stellen je übertrag
+0054 0A                103                     INC R2
+0055 23                104                     RL A
 0056 23                105                     RL A
 0057 23                106                     RL A
-0058 CA                107                     xch A,R2                ;tausche A(kku) mit R2
-0059 70F8              108                     JNZ SUM_LOOP_6          ; springe zurück zur Schleife, wenn r2 != 0
+0058 CA                107                     xch A,R2
+0059 70F8              108                     JNZ SUM_LOOP_6
 005B 60F1              109                     JZ JoaNhBinZuUnkreativ2
                        110
                        111
@@ -114,25 +114,25 @@ tictactoe                                                                       
                        113             ;-----------------------------------------------------------------------
                        114             ; 6< x < 9
                        115             LESS_THAN_9:
-005D FA                116                     MOV R2, A; register für zähler der foor loop
+005D FA                116                     MOV R2, A
 005E 7403              117                     MOV A, #00000011b
-0060 CA                118                     xch A,R2                ; dopppelte Vertauschung notwendig!!
+0060 CA                118                     xch A,R2
 0061 10D705            119                     JBC C,SUM_LOOP_9
                        120
                        121                     JoaNhBinZuUnkreativ3:
-0064 CA                122                             xch A,R2                ;tausche A mit R2
-0065 4D                123                             ORL A, R5               ;schreibe wert in TicTacToeFeld mit |-Verknüpfung
-0066 FD                124                             MOV R5, A               ;speichere Wert in Register zwischen
+0064 CA                122                             xch A,R2
+0065 4D                123                             ORL A, R5
+0066 FD                124                             MOV R5, A
 0067 80A9              125                             JMP MAIN_LOOP
                        126
                        127             SUM_LOOP_9:
 0069 CA                128                     xch A,R2
-006A 0A                129                     INC R2                  ; Inkrementiere den Zählerwert für die nächste Iteration
-006B 23                130                     RL A            ;rotiere akku um 3 Stellen je übertrag
+006A 0A                129                     INC R2
+006B 23                130                     RL A
 006C 23                131                     RL A
 006D 23                132                     RL A
-006E CA                133                     xch A,R2                ;tausche A(kku) mit R2
-006F 70F8              134                     JNZ SUM_LOOP_9          ; springe zurück zur Schleife, wenn r2 != 0
+006E CA                133                     xch A,R2
+006F 70F8              134                     JNZ SUM_LOOP_9
 0071 60F1              135                     JZ JoaNhBinZuUnkreativ3
                        136
                        137
@@ -176,12 +176,13 @@ tictactoe                                                                       
 00A2 109600            175                     JBC P1.6,display7
                        176             display7:
 00A5 D297              177                     setb P1.7
-                       178                     ;MOV P1, #00000000b ;setze p1 standardgemäß auf 0
-00A7 1112              179                     call main_loop
-                       180
+                       178
+                       179
+00A7 1112              180                     call main_loop
                        181
                        182
-                       183     END
+                       183
+                       184     END
 ASSEMBLY COMPLETE, NO ERRORS FOUND, NO WARNINGS
 
 

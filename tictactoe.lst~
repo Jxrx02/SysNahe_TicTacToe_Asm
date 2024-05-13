@@ -18,172 +18,170 @@ tictactoe                                                                       
                         17
 0006 120009             18     call INIT_BOARD
                         19     INIT_BOARD:
-0009 759002             20             MOV P1, #010b ; Anzahl der Zeilen im Spielfeld
-000C 75A002             21             MOV P2, #010b ; Adresse des Spielfelds im Speicher
-000F 7F00               22             mov r7, #00000000b      ;00 0 00 0 10
-                        23                                     ;00 0 00 0 10           wenn x < 3 -> R7
-                        24                                     ;00 0 00 0 00
-0011 7E00               25             mov r6, #00000000b      ;11 0 10 0 00
-                        26                                     ;11 0 10 0 00           wenn x < 6 -> R6
-                        27                                     ;00 0 00 0 00
-0013 7D00               28             mov r5, #00000000b      ;11 0 00 0 00
-                        29                                     ;11 0 00 0 00           sonst R5
-                        30
-                        31
-0015 120018             32     call MAIN_LOOP
-                        33     MAIN_LOOP:
+0009 7F00               20             mov r7, #00000000b      ;00 0 00 0 10
+                        21                                     ;00 0 00 0 10           wenn x < 3 -> R7
+                        22                                     ;00 0 00 0 00
+000B 7E00               23             mov r6, #00000000b      ;11 0 10 0 00
+                        24                                     ;11 0 10 0 00           wenn x < 6 -> R6
+                        25                                     ;00 0 00 0 00
+000D 7D00               26             mov r5, #00000000b      ;11 0 00 0 00
+                        27                                     ;11 0 00 0 00           sonst R5
+                        28
+                        29
+000F 120012             30     call MAIN_LOOP
+                        31     MAIN_LOOP:
+                        32             ;-----------------------------------------------------------------------
+                        33                 ; ON_INPUT: Wird P0.7 betätigt, so wird Port P0 (P0.0-P0.3) eingelesen -> liefert Dezimal
                         34             ;-----------------------------------------------------------------------
-                        35                 ; ON_INPUT: Wird P0.7 betätigt, so wird Port P0 (P0.0-P0.3) eingelesen -> liefert Dezimal
-                        36             ;-----------------------------------------------------------------------
-0018 208705             37             JB P0.7, ON_INPUT
-                        38
-                        39
-001B 120079             40             call DISPLAY_BOARD
-001E 80F8               41             JMP MAIN_LOOP
-                        42
-                        43
-                        44     ON_INPUT:
-0020 E580               45             MOV a, P0
-0022 540F               46             ANL a, #00FH ; bitweise &-Verknüpfung, um nur die letzten 4 Bits (P0.0-P0.3) auszuwerten
-0024 F8                 47             MOV R0, a
-                        48             ;-----------------------------------------------------------------------
-                        49                 ; Mappe Feld auf 8x8 Matrix
-                        50                 ; => R0 enthält den Wert des zu setztenden Feldes
-                        51             ;-----------------------------------------------------------------------
-                        52             ; x < 3
-0025 9403               53             SUBB A, #03h; Idee: 1-2 = -1 > -2 <=>  a<b
-0027 400E               54             JC LESS_THAN_3 ; x<3 -> schreibe in R7
-0029 600C               55             JZ LESS_THAN_3
-                        56
-                        57             ; 3 < x < 6
-002B 9403               58             SUBB A, #03h
-002D 401E               59             JC LESS_THAN_6 ; x<6 -> schreibe in R6
-002F 601C               60             JZ LESS_THAN_6
-                        61             ; 6< x < 9
-0031 9403               62             SUBB A, #03h
-0033 402E               63             JC LESS_THAN_9 ; x<6 -> schreibe in R6
-0035 602C               64             JZ LESS_THAN_9
-                        65
-                        66             ; x < 3
-                        67             LESS_THAN_3:
-0037 FA                 68                     MOV R2, A; register für zähler der foor loop
-0038 7403               69                     MOV A, #00000011b
-003A CA                 70                     xch A,R2                ; dopppelte Vertauschung notwendig!!
-003B 10D705             71                     JBC C,SUM_LOOP_3
-                        72
-                        73                     JoaNhBinZuUnkreativ1:
-003E CA                 74                             xch A,R2                ;tausche A mit R2
-003F 4F                 75                             ORL A, R7               ;schreibe wert in TicTacToeFeld mit |-Verknüpfung
-0040 FF                 76                             MOV R7, A               ;speichere Wert in Register zwischen
-0041 80D5               77                             JMP MAIN_LOOP
-                        78
-                        79             SUM_LOOP_3:
-0043 CA                 80                     xch A,R2
-0044 0A                 81                     INC R2                  ; Inkrementiere den Zählerwert für die nächste Iteration
-0045 23                 82                     RL A            ;rotiere akku um 3 Stellen je übertrag
-0046 23                 83                     RL A
-0047 23                 84                     RL A
-0048 CA                 85                     xch A,R2                ;tausche A(kku) mit R2
-0049 70F8               86                     JNZ SUM_LOOP_3          ; springe zurück zur Schleife, wenn r2 != 0
-004B 60F1               87                     JZ JoaNhBinZuUnkreativ1
-                        88
-                        89             ;-----------------------------------------------------------------------
-                        90             ; 3 < x < 6
-                        91             LESS_THAN_6:
-004D FA                 92                     MOV R2, A; register für zähler der foor loop
-004E 7403               93                     MOV A, #00000011b
-0050 CA                 94                     xch A,R2                ; dopppelte Vertauschung notwendig!!
-0051 10D705             95                     JBC C,SUM_LOOP_6
-                        96
-                        97                     JoaNhBinZuUnkreativ2:
-0054 CA                 98                             xch A,R2                ;tausche A mit R2
-0055 4E                 99                             ORL A, R6               ;schreibe wert in TicTacToeFeld mit |-Verknüpfung
-0056 FE                100                             MOV R6, A               ;speichere Wert in Register zwischen
-0057 80BF              101                             JMP MAIN_LOOP
-                       102
-                       103             SUM_LOOP_6:
-0059 CA                104                     xch A,R2
-005A 0A                105                     INC R2                  ; Inkrementiere den Zählerwert für die nächste Iteration
-005B 23                106                     RL A            ;rotiere akku um 3 Stellen je übertrag
-005C 23                107                     RL A
-005D 23                108                     RL A
-005E CA                109                     xch A,R2                ;tausche A(kku) mit R2
-005F 70F8              110                     JNZ SUM_LOOP_6          ; springe zurück zur Schleife, wenn r2 != 0
-0061 60F1              111                     JZ JoaNhBinZuUnkreativ2
+0012 208705             35             JB P0.7, ON_INPUT
+                        36
+                        37
+0015 120073             38             call DISPLAY_BOARD
+0018 80F8               39             JMP MAIN_LOOP
+                        40
+                        41
+                        42     ON_INPUT:
+001A E580               43             MOV a, P0
+001C 540F               44             ANL a, #00FH ; bitweise &-Verknüpfung, um nur die letzten 4 Bits (P0.0-P0.3) auszuwerten
+001E F8                 45             MOV R0, a
+                        46             ;-----------------------------------------------------------------------
+                        47                 ; Mappe Feld auf 8x8 Matrix
+                        48                 ; => R0 enthält den Wert des zu setztenden Feldes
+                        49             ;-----------------------------------------------------------------------
+                        50             ; x < 3
+001F 9403               51             SUBB A, #03h; Idee: 1-2 = -1 > -2 <=>  a<b
+0021 400E               52             JC LESS_THAN_3 ; x<3 -> schreibe in R7
+0023 600C               53             JZ LESS_THAN_3
+                        54
+                        55             ; 3 < x < 6
+0025 9403               56             SUBB A, #03h
+0027 401E               57             JC LESS_THAN_6 ; x<6 -> schreibe in R6
+0029 601C               58             JZ LESS_THAN_6
+                        59             ; 6< x < 9
+002B 9403               60             SUBB A, #03h
+002D 402E               61             JC LESS_THAN_9 ; x<6 -> schreibe in R6
+002F 602C               62             JZ LESS_THAN_9
+                        63
+                        64             ; x < 3
+                        65             LESS_THAN_3:
+0031 FA                 66                     MOV R2, A; register für zähler der foor loop
+0032 7403               67                     MOV A, #00000011b
+0034 CA                 68                     xch A,R2                ; dopppelte Vertauschung notwendig!!
+0035 10D705             69                     JBC C,SUM_LOOP_3
+                        70
+                        71                     JoaNhBinZuUnkreativ1:
+0038 CA                 72                             xch A,R2                ;tausche A mit R2
+0039 4F                 73                             ORL A, R7               ;schreibe wert in TicTacToeFeld mit |-Verknüpfung
+003A FF                 74                             MOV R7, A               ;speichere Wert in Register zwischen
+003B 80D5               75                             JMP MAIN_LOOP
+                        76
+                        77             SUM_LOOP_3:
+003D CA                 78                     xch A,R2
+003E 0A                 79                     INC R2                  ; Inkrementiere den Zählerwert für die nächste Iteration
+003F 23                 80                     RL A            ;rotiere akku um 3 Stellen je übertrag
+0040 23                 81                     RL A
+0041 23                 82                     RL A
+0042 CA                 83                     xch A,R2                ;tausche A(kku) mit R2
+0043 70F8               84                     JNZ SUM_LOOP_3          ; springe zurück zur Schleife, wenn r2 != 0
+0045 60F1               85                     JZ JoaNhBinZuUnkreativ1
+                        86
+                        87             ;-----------------------------------------------------------------------
+                        88             ; 3 < x < 6
+                        89             LESS_THAN_6:
+0047 FA                 90                     MOV R2, A; register für zähler der foor loop
+0048 7403               91                     MOV A, #00000011b
+004A CA                 92                     xch A,R2                ; dopppelte Vertauschung notwendig!!
+004B 10D705             93                     JBC C,SUM_LOOP_6
+                        94
+                        95                     JoaNhBinZuUnkreativ2:
+004E CA                 96                             xch A,R2                ;tausche A mit R2
+004F 4E                 97                             ORL A, R6               ;schreibe wert in TicTacToeFeld mit |-Verknüpfung
+0050 FE                 98                             MOV R6, A               ;speichere Wert in Register zwischen
+0051 80BF               99                             JMP MAIN_LOOP
+                       100
+                       101             SUM_LOOP_6:
+0053 CA                102                     xch A,R2
+0054 0A                103                     INC R2                  ; Inkrementiere den Zählerwert für die nächste Iteration
+0055 23                104                     RL A            ;rotiere akku um 3 Stellen je übertrag
+0056 23                105                     RL A
+0057 23                106                     RL A
+0058 CA                107                     xch A,R2                ;tausche A(kku) mit R2
+0059 70F8              108                     JNZ SUM_LOOP_6          ; springe zurück zur Schleife, wenn r2 != 0
+005B 60F1              109                     JZ JoaNhBinZuUnkreativ2
+                       110
+                       111
                        112
-                       113
-                       114
-                       115             ;-----------------------------------------------------------------------
-                       116             ; 6< x < 9
-                       117             LESS_THAN_9:
-0063 FA                118                     MOV R2, A; register für zähler der foor loop
-0064 7403              119                     MOV A, #00000011b
-0066 CA                120                     xch A,R2                ; dopppelte Vertauschung notwendig!!
-0067 10D705            121                     JBC C,SUM_LOOP_9
-                       122
-                       123                     JoaNhBinZuUnkreativ3:
-006A CA                124                             xch A,R2                ;tausche A mit R2
-006B 4D                125                             ORL A, R5               ;schreibe wert in TicTacToeFeld mit |-Verknüpfung
-006C FD                126                             MOV R5, A               ;speichere Wert in Register zwischen
-006D 80A9              127                             JMP MAIN_LOOP
-                       128
-                       129             SUM_LOOP_9:
-006F CA                130                     xch A,R2
-0070 0A                131                     INC R2                  ; Inkrementiere den Zählerwert für die nächste Iteration
-0071 23                132                     RL A            ;rotiere akku um 3 Stellen je übertrag
-0072 23                133                     RL A
-0073 23                134                     RL A
-0074 CA                135                     xch A,R2                ;tausche A(kku) mit R2
-0075 70F8              136                     JNZ SUM_LOOP_9          ; springe zurück zur Schleife, wenn r2 != 0
-0077 60F1              137                     JZ JoaNhBinZuUnkreativ3
+                       113             ;-----------------------------------------------------------------------
+                       114             ; 6< x < 9
+                       115             LESS_THAN_9:
+005D FA                116                     MOV R2, A; register für zähler der foor loop
+005E 7403              117                     MOV A, #00000011b
+0060 CA                118                     xch A,R2                ; dopppelte Vertauschung notwendig!!
+0061 10D705            119                     JBC C,SUM_LOOP_9
+                       120
+                       121                     JoaNhBinZuUnkreativ3:
+0064 CA                122                             xch A,R2                ;tausche A mit R2
+0065 4D                123                             ORL A, R5               ;schreibe wert in TicTacToeFeld mit |-Verknüpfung
+0066 FD                124                             MOV R5, A               ;speichere Wert in Register zwischen
+0067 80A9              125                             JMP MAIN_LOOP
+                       126
+                       127             SUM_LOOP_9:
+0069 CA                128                     xch A,R2
+006A 0A                129                     INC R2                  ; Inkrementiere den Zählerwert für die nächste Iteration
+006B 23                130                     RL A            ;rotiere akku um 3 Stellen je übertrag
+006C 23                131                     RL A
+006D 23                132                     RL A
+006E CA                133                     xch A,R2                ;tausche A(kku) mit R2
+006F 70F8              134                     JNZ SUM_LOOP_9          ; springe zurück zur Schleife, wenn r2 != 0
+0071 60F1              135                     JZ JoaNhBinZuUnkreativ3
+                       136
+                       137
                        138
                        139
                        140
-                       141
-                       142
-                       143     DISPLAY_BOARD:
-                       144             ;-----------------------------------------------------------------------
-                       145                 ; Zeige R7,R6,R5 nacheinander gemultiplext an
-                       146                 ; R7, R6, R5 spiegeln das Feld wider, x die Eingabe aus R0 von Funktion ON_INPUT (Wird au
-                       147             ;-----------------------------------------------------------------------
+                       141     DISPLAY_BOARD:
+                       142             ;-----------------------------------------------------------------------
+                       143                 ; Zeige R7,R6,R5 nacheinander gemultiplext an
+                       144                 ; R7, R6, R5 spiegeln das Feld wider, x die Eingabe aus R0 von Funktion ON_INPUT (Wird au
+                       145             ;-----------------------------------------------------------------------
+                       146
+                       147
                        148
-                       149
-                       150
-0079 759000            151             MOV P1, #00000000b ;setze p1 standardgemäß auf 0
-                       152             ;display0:
-007C 8FA0              153                     MOV P2, R7
-007E D290              154                     setb P1.0
-0080 109000            155                     JBC P1.0,display1
-                       156             display1:
-                       157                     ;MOV P2, R7
-0083 D291              158                     setb P1.1
-0085 109100            159                     JBC P1.1,display2
-                       160             display2:
-0088 75A000            161                     MOV P2, #00000000b
-008B D292              162                     setb P1.2
-008D 109200            163                     JBC P1.2,display3
-0090 8EA0              164             display3: MOV P2, R6
-0092 D293              165                     setb P1.3
-0094 109300            166                     JBC P1.3,display4
-                       167             display4:
-0097 D294              168                     setb P1.4
-0099 109400            169                     JBC P1.4,display5
-                       170             display5:
-009C 75A000            171                     MOV P2, #00000000b
-009F D295              172                     setb P1.5
-00A1 109500            173                     JBC P1.5,display6
-                       174             display6:
-00A4 8DA0              175                     MOV P2, R5
-00A6 D296              176                     setb P1.6
-00A8 109600            177                     JBC P1.6,display7
-                       178             display7:
-00AB D297              179                     setb P1.7
-                       180                     ;MOV P1, #00000000b ;setze p1 standardgemäß auf 0
-00AD 1118              181                     call main_loop
+0073 759000            149             MOV P1, #00000000b ;setze p1 standardgemäß auf 0
+                       150             ;display0:
+0076 8FA0              151                     MOV P2, R7
+0078 D290              152                     setb P1.0
+007A 109000            153                     JBC P1.0,display1
+                       154             display1:
+                       155                     ;MOV P2, R7
+007D D291              156                     setb P1.1
+007F 109100            157                     JBC P1.1,display2
+                       158             display2:
+0082 75A000            159                     MOV P2, #00000000b
+0085 D292              160                     setb P1.2
+0087 109200            161                     JBC P1.2,display3
+008A 8EA0              162             display3: MOV P2, R6
+008C D293              163                     setb P1.3
+008E 109300            164                     JBC P1.3,display4
+                       165             display4:
+0091 D294              166                     setb P1.4
+0093 109400            167                     JBC P1.4,display5
+                       168             display5:
+0096 75A000            169                     MOV P2, #00000000b
+0099 D295              170                     setb P1.5
+009B 109500            171                     JBC P1.5,display6
+                       172             display6:
+009E 8DA0              173                     MOV P2, R5
+00A0 D296              174                     setb P1.6
+00A2 109600            175                     JBC P1.6,display7
+                       176             display7:
+00A5 D297              177                     setb P1.7
+                       178                     ;MOV P1, #00000000b ;setze p1 standardgemäß auf 0
+00A7 1112              179                     call main_loop
+                       180
+                       181
                        182
-                       183
-                       184
-                       185     END
+                       183     END
 ASSEMBLY COMPLETE, NO ERRORS FOUND, NO WARNINGS
 
 
@@ -241,14 +239,14 @@ CPRL2. . . . . . . . . . . . . . . .  B  ADDR  00C8H  NOT USED
 CR . . . . . . . . . . . . . . . . .  B  ADDR  00DEH  NOT USED
 CT2. . . . . . . . . . . . . . . . .  B  ADDR  00C9H  NOT USED
 CY . . . . . . . . . . . . . . . . .  B  ADDR  00D7H  NOT USED
-DISPLAY1 . . . . . . . . . . . . . .  C  ADDR  0083H
-DISPLAY2 . . . . . . . . . . . . . .  C  ADDR  0088H
-DISPLAY3 . . . . . . . . . . . . . .  C  ADDR  0090H
-DISPLAY4 . . . . . . . . . . . . . .  C  ADDR  0097H
-DISPLAY5 . . . . . . . . . . . . . .  C  ADDR  009CH
-DISPLAY6 . . . . . . . . . . . . . .  C  ADDR  00A4H
-DISPLAY7 . . . . . . . . . . . . . .  C  ADDR  00ABH
-DISPLAY_BOARD. . . . . . . . . . . .  C  ADDR  0079H
+DISPLAY1 . . . . . . . . . . . . . .  C  ADDR  007DH
+DISPLAY2 . . . . . . . . . . . . . .  C  ADDR  0082H
+DISPLAY3 . . . . . . . . . . . . . .  C  ADDR  008AH
+DISPLAY4 . . . . . . . . . . . . . .  C  ADDR  0091H
+DISPLAY5 . . . . . . . . . . . . . .  C  ADDR  0096H
+DISPLAY6 . . . . . . . . . . . . . .  C  ADDR  009EH
+DISPLAY7 . . . . . . . . . . . . . .  C  ADDR  00A5H
+DISPLAY_BOARD. . . . . . . . . . . .  C  ADDR  0073H
 DP0H . . . . . . . . . . . . . . . .  D  ADDR  0083H  NOT USED
 DP0L . . . . . . . . . . . . . . . .  D  ADDR  0082H  NOT USED
 DP1H . . . . . . . . . . . . . . . .  D  ADDR  0085H  NOT USED
@@ -284,17 +282,17 @@ IPL0 . . . . . . . . . . . . . . . .  D  ADDR  00B8H  NOT USED
 IPL1 . . . . . . . . . . . . . . . .  D  ADDR  00B2H  NOT USED
 IT0. . . . . . . . . . . . . . . . .  B  ADDR  0088H  NOT USED
 IT1. . . . . . . . . . . . . . . . .  B  ADDR  008AH  NOT USED
-JOANHBINZUUNKREATIV1 . . . . . . . .  C  ADDR  003EH
-JOANHBINZUUNKREATIV2 . . . . . . . .  C  ADDR  0054H
-JOANHBINZUUNKREATIV3 . . . . . . . .  C  ADDR  006AH
+JOANHBINZUUNKREATIV1 . . . . . . . .  C  ADDR  0038H
+JOANHBINZUUNKREATIV2 . . . . . . . .  C  ADDR  004EH
+JOANHBINZUUNKREATIV3 . . . . . . . .  C  ADDR  0064H
 KBE. . . . . . . . . . . . . . . . .  D  ADDR  009DH  NOT USED
 KBF. . . . . . . . . . . . . . . . .  D  ADDR  009EH  NOT USED
 KBLS . . . . . . . . . . . . . . . .  D  ADDR  009CH  NOT USED
-LESS_THAN_3. . . . . . . . . . . . .  C  ADDR  0037H
-LESS_THAN_6. . . . . . . . . . . . .  C  ADDR  004DH
-LESS_THAN_9. . . . . . . . . . . . .  C  ADDR  0063H
-MAIN_LOOP. . . . . . . . . . . . . .  C  ADDR  0018H
-ON_INPUT . . . . . . . . . . . . . .  C  ADDR  0020H
+LESS_THAN_3. . . . . . . . . . . . .  C  ADDR  0031H
+LESS_THAN_6. . . . . . . . . . . . .  C  ADDR  0047H
+LESS_THAN_9. . . . . . . . . . . . .  C  ADDR  005DH
+MAIN_LOOP. . . . . . . . . . . . . .  C  ADDR  0012H
+ON_INPUT . . . . . . . . . . . . . .  C  ADDR  001AH
 OSCCON . . . . . . . . . . . . . . .  D  ADDR  0086H  NOT USED
 OV . . . . . . . . . . . . . . . . .  B  ADDR  00D2H  NOT USED
 P. . . . . . . . . . . . . . . . . .  B  ADDR  00D0H  NOT USED
@@ -356,9 +354,9 @@ SPDAT. . . . . . . . . . . . . . . .  D  ADDR  00C5H  NOT USED
 SPDR . . . . . . . . . . . . . . . .  D  ADDR  0086H  NOT USED
 SPSR . . . . . . . . . . . . . . . .  D  ADDR  00AAH  NOT USED
 SPSTA. . . . . . . . . . . . . . . .  D  ADDR  00C4H  NOT USED
-SUM_LOOP_3 . . . . . . . . . . . . .  C  ADDR  0043H
-SUM_LOOP_6 . . . . . . . . . . . . .  C  ADDR  0059H
-SUM_LOOP_9 . . . . . . . . . . . . .  C  ADDR  006FH
+SUM_LOOP_3 . . . . . . . . . . . . .  C  ADDR  003DH
+SUM_LOOP_6 . . . . . . . . . . . . .  C  ADDR  0053H
+SUM_LOOP_9 . . . . . . . . . . . . .  C  ADDR  0069H
 T0 . . . . . . . . . . . . . . . . .  B  ADDR  00B4H  NOT USED
 T1 . . . . . . . . . . . . . . . . .  B  ADDR  00B5H  NOT USED
 T2CON. . . . . . . . . . . . . . . .  D  ADDR  00C8H  NOT USED
