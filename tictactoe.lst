@@ -157,28 +157,28 @@ tictactoe                                                                       
 007D D291              156                     setb P1.1
 007F 109100            157                     JBC P1.1,display2
                        158             display2:
-0082 75A000            159                     MOV P2, #00000000b
-0085 D292              160                     setb P1.2
-0087 109200            161                     JBC P1.2,display3
-008A 8EA0              162             display3: MOV P2, R6
-008C D293              163                     setb P1.3
-008E 109300            164                     JBC P1.3,display4
+                       159                     ;MOV P2, #00000000b
+0082 D292              160                     setb P1.2
+0084 109200            161                     JBC P1.2,display3
+0087 8EA0              162             display3: MOV P2, R6
+0089 D293              163                     setb P1.3
+008B 109300            164                     JBC P1.3,display4
                        165             display4:
-0091 D294              166                     setb P1.4
-0093 109400            167                     JBC P1.4,display5
+008E D294              166                     setb P1.4
+0090 109400            167                     JBC P1.4,display5
                        168             display5:
-0096 75A000            169                     MOV P2, #00000000b
-0099 D295              170                     setb P1.5
-009B 109500            171                     JBC P1.5,display6
+                       169                     ;MOV P2, #00000000b
+0093 D295              170                     setb P1.5
+0095 109500            171                     JBC P1.5,display6
                        172             display6:
-009E 8DA0              173                     MOV P2, R5
-00A0 D296              174                     setb P1.6
-00A2 109600            175                     JBC P1.6,display7
+0098 8DA0              173                     MOV P2, R5
+009A D296              174                     setb P1.6
+009C 109600            175                     JBC P1.6,display7
                        176             display7:
-00A5 D297              177                     setb P1.7
+009F D297              177                     setb P1.7
                        178
                        179
-00A7 1112              180                     call main_loop
+00A1 1112              180                     call main_loop
                        181
                        182
                        183
@@ -242,11 +242,11 @@ CT2. . . . . . . . . . . . . . . . .  B  ADDR  00C9H  NOT USED
 CY . . . . . . . . . . . . . . . . .  B  ADDR  00D7H  NOT USED
 DISPLAY1 . . . . . . . . . . . . . .  C  ADDR  007DH
 DISPLAY2 . . . . . . . . . . . . . .  C  ADDR  0082H
-DISPLAY3 . . . . . . . . . . . . . .  C  ADDR  008AH
-DISPLAY4 . . . . . . . . . . . . . .  C  ADDR  0091H
-DISPLAY5 . . . . . . . . . . . . . .  C  ADDR  0096H
-DISPLAY6 . . . . . . . . . . . . . .  C  ADDR  009EH
-DISPLAY7 . . . . . . . . . . . . . .  C  ADDR  00A5H
+DISPLAY3 . . . . . . . . . . . . . .  C  ADDR  0087H
+DISPLAY4 . . . . . . . . . . . . . .  C  ADDR  008EH
+DISPLAY5 . . . . . . . . . . . . . .  C  ADDR  0093H
+DISPLAY6 . . . . . . . . . . . . . .  C  ADDR  0098H
+DISPLAY7 . . . . . . . . . . . . . .  C  ADDR  009FH
 DISPLAY_BOARD. . . . . . . . . . . .  C  ADDR  0073H
 DP0H . . . . . . . . . . . . . . . .  D  ADDR  0083H  NOT USED
 DP0L . . . . . . . . . . . . . . . .  D  ADDR  0082H  NOT USED

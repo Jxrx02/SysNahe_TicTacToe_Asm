@@ -156,7 +156,7 @@ DISPLAY_BOARD:
 	    	setb P1.1
 		JBC P1.1,display2
 	display2:
-	    	MOV P2, #00000000b
+	    	;MOV P2, #00000000b
 	    	setb P1.2
 		JBC P1.2,display3
 	display3: MOV P2, R6
@@ -166,7 +166,7 @@ DISPLAY_BOARD:
 	    	setb P1.4
 		JBC P1.4,display5
 	display5:
-		MOV P2, #00000000b
+		;MOV P2, #00000000b
 	    	setb P1.5
 		JBC P1.5,display6
 	display6:

@@ -2,4 +2,4 @@
 # Project: TicTacToe
 # Component: LED Matrix
 
-LedMatrix {{C5 2 C6 2 C7 2 R0 1 R1 1 R2 1 R3 1 R4 1 R5 1 R6 1 R7 1 C0 2 C1 2 C2 2 C3 2 C4 2} {C5 - C6 5 C7 6 R0 7 R1 6 R2 - R3 4 R4 3 R5 - R6 1 R7 0 C0 0 C1 1 C2 - C3 3 C4 4} {} {8x8 Matrix für TicTacToe} yellow 1000 {1 1} 0 1}
+LedMatrix {{C5 2 C6 2 C7 2 R0 1 R1 1 R2 1 R3 1 R4 1 R5 1 R6 1 R7 1 C0 2 C1 2 C2 2 C3 2 C4 2} {C5 - C6 6 C7 7 R0 7 R1 6 R2 - R3 4 R4 3 R5 - R6 1 R7 0 C0 0 C1 1 C2 - C3 3 C4 4} {} {8x8 Matrix für TicTacToe} yellow 1000 {1 1} 0 1}
