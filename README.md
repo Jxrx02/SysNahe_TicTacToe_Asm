@@ -18,7 +18,8 @@ P0.4-P0.6 werden herausgefiltert.
 
 
 Da virtuelle HW verwendet wird sollte man nach 1x Multiplexen ggf. 'Options' -> 'all fade out' klicken
-![image](https://github.com/Jxrx02/SysNahe_TicTacToe_Asm/assets/131343499/a65abc81-81f4-4a96-970a-4e7e24c4b098)
+![image](https://github.com/Jxrx02/SysNahe_TicTacToe_Asm/assets/131343499/4a8adade-6ede-4db6-97bb-b4493e985c94)
+
 
 ## 3. Vorlage wählen; sollte im Repo zu finden sein
 ![image](https://github.com/Jxrx02/SysNahe_TicTacToe_Asm/assets/131343499/997d7338-780e-44c0-bcc3-e910c9204e7e)
