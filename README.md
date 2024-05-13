@@ -1,7 +1,6 @@
 ## ⚒TODOs🛠: 
 * Interrupt für Eingabe von Feld -> Anzeige vom Display soll unterbrochen werden
 * 2 Spieler -> Spieler 1 hat das ganze Feld ausgemalt und Spieler 2 diagonale (sowas /)
-* Port 2.2 wird iwie falsch dargestellt. vllt iwo ein bitfehler übersehen
 * Timer zum reagieren?
   
 
