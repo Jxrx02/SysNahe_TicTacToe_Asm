@@ -4,18 +4,39 @@
 ; Ausgabe: 8x8-LED-Matrix an P1, P2
 ;
 ; -------------------------------------------------
+
+
 ;-----------------------------------------------------------------------
 ; Voreingestellungen 
 ;-----------------------------------------------------------------------
 ORG 0H   ; Startadresse des Programms
-MOV P1, #00H  ; Konfiguriere Port 1 als Ausgangsport für LED-Matrix
-MOV P2, #00H  ; Konfiguriere Port 2 als Ausgangsport für LED-Matrix
+MOV P1, #00H  	; Konfiguriere Port 1 als Ausgangsport für LED-Matrix
+MOV P2, #00H  	; Konfiguriere Port 2 als Ausgangsport für LED-Matrix
+
+;Bits für Interrupt
+SETB EA
+;SETB IE0 	; Setzte Bit IE1 für Interruptfreigabe 3.2
+SETB EX0 	; Setzte Bit EX0 für Interruptfreigabe (Port 3.2)
+SETB PX0	; Setzte Priorität für Interruptfreigabe (Port 3.2)
+
+
+call INIT_BOARD
+call MAIN_LOOP
+;-----------------------------------------------------------------------
+;ISR
+;-----------------------------------------------------------------------
+ORG 13H ; adresse von interrupt 3.2
+call ON_INPUT
+reti ; return from interupt; remove interrupt-bit
+
+
 
 ;-----------------------------------------------------------------------
 ; Logik
 ;-----------------------------------------------------------------------
 
-call INIT_BOARD
+
+
 INIT_BOARD:
     	mov r7, #00000000b	;00 0 00 0 10
 				;00 0 00 0 10    	wenn x < 3 -> R7
@@ -27,13 +48,12 @@ INIT_BOARD:
 				;11 0 00 0 00		sonst R5
 
 
-call MAIN_LOOP
+
 MAIN_LOOP:
 	;-----------------------------------------------------------------------
 	    ; ON_INPUT: Wird P0.7 betätigt, so wird Port P0 (P0.0-P0.3) eingelesen -> liefert Dezimalwert in R0
 	;-----------------------------------------------------------------------
    	JB P0.7, ON_INPUT 
-
 
 	call DISPLAY_BOARD
     	JMP MAIN_LOOP 
@@ -64,6 +84,7 @@ ON_INPUT:
 	; x < 3
 	LESS_THAN_3: 
 		MOV R2, A; register für zähler der foor loop
+		; wenn Bit für S1 gesetzt ist, so schreibe #00000011b, ansonsten #00000001b
 		MOV A, #00000011b
 		xch A,R2		; dopppelte Vertauschung notwendig!!
 		JBC C,SUM_LOOP_3
@@ -73,6 +94,7 @@ ON_INPUT:
 			ORL A, R7		;schreibe wert in TicTacToeFeld mit |-Verknüpfung
 			MOV R7, A 		;speichere Wert in Register zwischen
 			JMP MAIN_LOOP 
+			;RET			;RET, wenn Interrupt verwendet wird 
 
 	SUM_LOOP_3:
 	  	xch A,R2
@@ -97,6 +119,7 @@ ON_INPUT:
 			ORL A, R6	
 			MOV R6, A 		
 			JMP MAIN_LOOP 
+			;RET		RET, wenn Interrupt verwendet wird 
 				
 	SUM_LOOP_6:
 	  	xch A,R2
@@ -123,6 +146,7 @@ ON_INPUT:
 			ORL A, R5	
 			MOV R5, A 		
 			JMP MAIN_LOOP 
+			;RET
 				
 	SUM_LOOP_9:
 	  	xch A,R2
@@ -178,6 +202,7 @@ DISPLAY_BOARD:
 
 
 		call main_loop	
+
 
 
 
