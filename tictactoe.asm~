@@ -28,17 +28,17 @@ INIT_BOARD:
 	SETB EX1  	; Externen Interrupt aktivieren
 	SETB EA   	; Interrupts generell zulassen
 	 ; --- ab hier reagiert der µC auf den externen Interrupt 0 und springt auf Adresse 03H (ISR)
-    	mov r7, #00000000b	;00 0 00 0 10
-				;00 0 00 0 10    	wenn x < 3 -> R7
-				;00 0 00 0 00
-	mov r6, #00000000b	;11 0 10 0 00
-				;11 0 10 0 00   	wenn x < 6 -> R6
-				;00 0 00 0 00
-	mov r5, #00000000b	;11 0 00 0 00
-				;11 0 00 0 00		sonst R5
+    	mov r7, #00000000b	;00 | 00 | 01
+				;00 | 00 | 01    	wenn x < 3 -> R7
+				;-- - -- - --
+	mov r6, #00000000b	;11 | 01 | 00
+				;11 | 01 | 00   	wenn x < 6 -> R6
+				;-- | -- | --
+	mov r5, #00000000b	;11 | 00 | 00
+				;11 | 00 | 00		sonst R5
 
-	MOV P1, #00H  	; Konfiguriere Port 1 als Ausgangsport für LED-Matrix; Befehl nicht notwendig, aber warum nicht '^^
-	MOV P2, #00H  	; Konfiguriere Port 2 als Ausgangsport für LED-Matrix; Befehl nicht notwendig, aber warum nicht '^^
+	MOV P1, #00H  	; Reset Register Port 1 als Ausgangsport für LED-Matrix; Befehl nicht notwendig, aber warum nicht '^^
+	MOV P2, #00H  	; Reset Register Port 2 als Ausgangsport für LED-Matrix; Befehl nicht notwendig, aber warum nicht '^^
 	
 	LJMP MAIN_LOOP
 

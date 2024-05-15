@@ -28,17 +28,17 @@ INIT_BOARD:
 	SETB EX1  	; Externen Interrupt aktivieren
 	SETB EA   	; Interrupts generell zulassen
 	 ; --- ab hier reagiert der µC auf den externen Interrupt 0 und springt auf Adresse 03H (ISR)
-    	mov r7, #00000000b	;00 0 00 0 10
-				;00 0 00 0 10    	wenn x < 3 -> R7
-				;00 0 00 0 00
-	mov r6, #00000000b	;11 0 10 0 00
-				;11 0 10 0 00   	wenn x < 6 -> R6
-				;00 0 00 0 00
-	mov r5, #00000000b	;11 0 00 0 00
-				;11 0 00 0 00		sonst R5
+    	mov r7, #00000000b	;00 | 00 | 01
+				;00 | 00 | 01    	wenn x < 3 -> R7
+				;-- - -- - --
+	mov r6, #00000000b	;11 | 01 | 00
+				;11 | 01 | 00   	wenn x < 6 -> R6
+				;-- | -- | --
+	mov r5, #00000000b	;11 | 00 | 00
+				;11 | 00 | 00		sonst R5
 
-	MOV P1, #00H  	; Konfiguriere Port 1 als Ausgangsport für LED-Matrix; Befehl nicht notwendig, aber warum nicht '^^
-	MOV P2, #00H  	; Konfiguriere Port 2 als Ausgangsport für LED-Matrix; Befehl nicht notwendig, aber warum nicht '^^
+	MOV P1, #00H  	; Reset Register Port 1 als Ausgangsport für LED-Matrix; Befehl nicht notwendig, aber warum nicht '^^
+	MOV P2, #00H  	; Reset Register Port 2 als Ausgangsport für LED-Matrix; Befehl nicht notwendig, aber warum nicht '^^
 	
 	LJMP MAIN_LOOP
 
@@ -47,8 +47,6 @@ MAIN_LOOP:
 	;-----------------------------------------------------------------------
 	    ; ON_INPUT: Wird P3.2 betätigt, so wird Port P0 (P0.0-P0.3) eingelesen -> liefert Dezimalwert in R0
 	;-----------------------------------------------------------------------
-   	;JB P0.7, ON_INPUT 
-
 	LJMP DISPLAY_BOARD
 
     	JMP MAIN_LOOP 
@@ -63,7 +61,9 @@ ON_INPUT:
 	    ; => R0 enthält den Wert des zu setztenden Feldes
 	;-----------------------------------------------------------------------
 	; x < 3
-	SUBB A, #03h; Idee: Angenommen: Eingabe 8  soll auf Feld 8 (mitte unten) gemappt werden -> schreibe in unteres Register (R5) und bestimme Mitte
+	SUBB A, #03h; Idee: Angenommen: Eingabe 8  soll auf Feld 8 (mitte unten) gemappt werden -> schreibe in unteres Register (R5) und 
+			;bestimme die Mitte durch Bitshifts
+			;
 			; 8-3 >0; 5-3>0; 2-3 = -1 (^=n) Setze Carry oder wenn akku leer, springe auf schleife und durchlaufe n mal === if a<b 
 	JC LESS_THAN_3 ; x<3 -> schreibe in R7
 	JZ LESS_THAN_3
@@ -192,6 +192,25 @@ CLEAR_FIELD:
 	MOV R6, #00H
 	MOV R5, #00H
 	RETI
+
+CHECK_FOR_WIN:
+;Waagerechte
+;a: Für Spieler 2 (Ganzes Feld) für jedes Register (5-7) addiere 1 und prüfe ob Carry gesetzt wird, wenn Carry, dann add zählerstand
+;b: Für Spieler 1 vorher noch #10101010b mit or-verknüpfung, dann a: mit anderen zählerstand (auswertung über Port 3.7, um Spieler herauszufinden)
+
+;Senkrechte
+;a: für Register R7, R6, R5 jeweils &-Verknüpfung #01X00000b; 
+;b: schreibe Register nacheinander (R7 nach R5) in alu; xor mit #01X01X01 -> wenn ALU #00000000, dann add zählerstand
+;c - das gleiche noch mit den anderen reihen dann #00X01X00, dann #00X00X01 &
+
+
+;Diagonale "/"
+;a: R7 & #01000000, R6 & #00001000, R5 & #00000001
+;b: |-Verknüpfung mit #10110110
+;c: add 1, prüfe ob carry gesetzt wird, wenn dann add zählerstand
+
+;Diagonale "\"
+;selbe, nur Register tauschen
 
 
 DISPLAY_BOARD:
