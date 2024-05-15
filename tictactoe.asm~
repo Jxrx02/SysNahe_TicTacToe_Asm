@@ -1,41 +1,30 @@
 ;-------------------------------------------------
 ;TicTacToe, 2 Spieler
-; Eingabe: Matrix-Keypad an P0 (P0.0-P0.3, für 9 Felder), Eingabe bestätigen P0.7 ; Wertebereich: [1-9]
+; Eingabe: Matrix-Keypad an P0 (P0.0-P0.3, für 9 Felder), Eingabe bestätigen P3.2; P3.2 muss direkt wieder betätigt werden ; Wertebereich: [1-9]
 ; Ausgabe: 8x8-LED-Matrix an P1, P2
 ;
 ; -------------------------------------------------
-
-
-;-----------------------------------------------------------------------
-; Voreingestellungen 
-;-----------------------------------------------------------------------
 ORG 0H   ; Startadresse des Programms
-MOV P1, #00H  	; Konfiguriere Port 1 als Ausgangsport für LED-Matrix
-MOV P2, #00H  	; Konfiguriere Port 2 als Ausgangsport für LED-Matrix
-
 LJMP INIT_BOARD
-LJMP MAIN_LOOP
+
 ;-----------------------------------------------------------------------
-;ISR  <--- IRGENDETWAS LÄUFT HIER NOCH SCHIEF -> Bei Lausen Nachfragen
+;ISR 
 ;-----------------------------------------------------------------------
-ORG 13H ; 03H ist die eigentliche adresse von interrupt 3.2, aber führt zu fehler
-call ON_INPUT
-reti ; return from interupt; remove interrupt-bit
+ORG 03H ; Einsprungsadresse von interrupt 3.2
+LJMP ON_INPUT
 
 
 
 ;-----------------------------------------------------------------------
 ; Logik
 ;-----------------------------------------------------------------------
-
-
-
 INIT_BOARD:
 	;Bits für Interrupt
-	SETB IT0  ; Externer Interrupt reagiert auf fallende Flanke an P3.2
-	SETB EX0  ; Externen Interrupt aktivieren
-	SETB EA   ; Interrupts generell zulassen
-	 ; --- ab hier reagiert der µC auf den externen Interrupt 0
+	;SETB IT0	; Externer Interrupt reagiert auf fallende Flanke an P3.2; -> ist für richtige hardware besser geeignet
+	CLR IT0		; Externer Interrupt reagiert auf gedrückten Schalter P3.2
+	SETB EX0  	; Externen Interrupt aktivieren
+	SETB EA   	; Interrupts generell zulassen
+	 ; --- ab hier reagiert der µC auf den externen Interrupt 0 und springt auf Adresse 03H (ISR)
     	mov r7, #00000000b	;00 0 00 0 10
 				;00 0 00 0 10    	wenn x < 3 -> R7
 				;00 0 00 0 00
@@ -45,13 +34,17 @@ INIT_BOARD:
 	mov r5, #00000000b	;11 0 00 0 00
 				;11 0 00 0 00		sonst R5
 
+	MOV P1, #00H  	; Konfiguriere Port 1 als Ausgangsport für LED-Matrix; Befehl nicht notwendig, aber warum nicht '^^
+	MOV P2, #00H  	; Konfiguriere Port 2 als Ausgangsport für LED-Matrix; Befehl nicht notwendig, aber warum nicht '^^
+	
+	LJMP MAIN_LOOP
 
 
 MAIN_LOOP:
 	;-----------------------------------------------------------------------
-	    ; ON_INPUT: Wird P0.7 betätigt, so wird Port P0 (P0.0-P0.3) eingelesen -> liefert Dezimalwert in R0
+	    ; ON_INPUT: Wird P3.2 betätigt, so wird Port P0 (P0.0-P0.3) eingelesen -> liefert Dezimalwert in R0
 	;-----------------------------------------------------------------------
-   	JB P0.7, ON_INPUT 
+   	;JB P0.7, ON_INPUT 
 
 	LJMP DISPLAY_BOARD
 
@@ -59,7 +52,6 @@ MAIN_LOOP:
 
 
 ON_INPUT:
-	;CPL P0.7
     	MOV a, P0
     	ANL a, #00FH ; bitweise &-Verknüpfung, um nur die letzten 4 Bits (P0.0-P0.3) auszuwerten
     	MOV R0, a
@@ -68,7 +60,8 @@ ON_INPUT:
 	    ; => R0 enthält den Wert des zu setztenden Feldes
 	;-----------------------------------------------------------------------
 	; x < 3
-	SUBB A, #03h; Idee: 8-3 >0; 5-3>0; 2-3 = -1 Setze Carry oder wenn akku leer, springe auf schleife === if a<b 
+	SUBB A, #03h; Idee: Angenommen: Eingabe 8  soll auf Feld 8 (mitte unten) gemappt werden -> schreibe in unteres Register (R5) und bestimme Mitte
+			; 8-3 >0; 5-3>0; 2-3 = -1 (^=n) Setze Carry oder wenn akku leer, springe auf schleife und durchlaufe n mal === if a<b 
 	JC LESS_THAN_3 ; x<3 -> schreibe in R7
 	JZ LESS_THAN_3
 	
@@ -76,9 +69,10 @@ ON_INPUT:
 	SUBB A, #03h
 	JC LESS_THAN_6 ; x<6 -> schreibe in R6
 	JZ LESS_THAN_6
+	
 	; 6< x < 9
 	SUBB A, #03h
-	JC LESS_THAN_9 ; x<6 -> schreibe in R6
+	JC LESS_THAN_9 ; x<9 -> schreibe in R5
 	JZ LESS_THAN_9
 
 	; x < 3
@@ -94,10 +88,10 @@ ON_INPUT:
 		
 		JoaNhBinZuUnkreativ1:
 			xch A,R2		;tausche A mit R2
-			ORL A, R7		;schreibe wert in TicTacToeFeld mit |-Verknüpfung
+			XRL A, R7		;schreibe wert in TicTacToeFeld mit exclusiv-oder-Verknüpfung
 			MOV R7, A 		;speichere Wert in Register zwischen
-			JMP MAIN_LOOP 
-			;RET			;RET, wenn Interrupt verwendet wird 
+
+			RETI			;return from interupt; remove interrupt-bit
 
 	SUM_LOOP_3:
 	  	xch A,R2
@@ -122,10 +116,10 @@ ON_INPUT:
 
 		JoaNhBinZuUnkreativ2:
 			xch A,R2		
-			ORL A, R6	
+			XRL A, R6	
 			MOV R6, A 		
-			JMP MAIN_LOOP 
-			;RET		RET, wenn Interrupt verwendet wird 
+
+			RETI		
 				
 	SUM_LOOP_6:
 	  	xch A,R2
@@ -152,10 +146,10 @@ ON_INPUT:
 
 		JoaNhBinZuUnkreativ3:
 			xch A,R2	
-			ORL A, R5	
+			XRL A, R5	
 			MOV R5, A 		
-			JMP MAIN_LOOP 
-			;RET
+
+			RETI
 				
 	SUM_LOOP_9:
 	  	xch A,R2
@@ -167,7 +161,7 @@ ON_INPUT:
 		JNZ SUM_LOOP_9  	
 		JZ JoaNhBinZuUnkreativ3
 
-; Das hier ist bisschen unschön, aber es muss zu der jeweiligen Adresse im 'IF' zurückgesprungen werden
+; Das hier ist bisschen unschön, aber es muss zu der jeweiligen Adresse im 'IF' zurückgesprungen werden; würde bestimmt mit Stack funktionieren aber my brain hurts very bad
 WRITE_PLAYER_1_INTO_FIELD:
 	MOV A, #00000011b
 	JMP NACH_REGISTER_FÜLLEN1
