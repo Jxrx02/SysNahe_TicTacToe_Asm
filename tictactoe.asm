@@ -4,16 +4,17 @@
 ; Ausgabe: 8x8-LED-Matrix an P1, P2
 ;
 ; -------------------------------------------------
-ORG 0H   ; Startadresse des Programms
+ORG 0000H   ; Startadresse des Programms
 LJMP INIT_BOARD
 
 ;-----------------------------------------------------------------------
 ;ISR 
 ;-----------------------------------------------------------------------
-ORG 03H ; Einsprungsadresse von interrupt 3.2
+ORG 0003H ; Einsprungsadresse von interrupt 3.2
 LJMP ON_INPUT
 
-
+ORG 0013H ; Einsprungsadresse von interrupt 3.3
+LJMP CLEAR_FIELD
 
 ;-----------------------------------------------------------------------
 ; Logik
@@ -23,6 +24,8 @@ INIT_BOARD:
 	;SETB IT0	; Externer Interrupt reagiert auf fallende Flanke an P3.2; -> ist für richtige hardware besser geeignet
 	CLR IT0		; Externer Interrupt reagiert auf gedrückten Schalter P3.2
 	SETB EX0  	; Externen Interrupt aktivieren
+	CLR IT1		; Externer Interrupt reagiert auf gedrückten Schalter P3.3
+	SETB EX1  	; Externen Interrupt aktivieren
 	SETB EA   	; Interrupts generell zulassen
 	 ; --- ab hier reagiert der µC auf den externen Interrupt 0 und springt auf Adresse 03H (ISR)
     	mov r7, #00000000b	;00 0 00 0 10
@@ -183,6 +186,12 @@ WRITE_PLAYER_2_INTO_FIELD3:
 	MOV A, #00000001b
 	JMP NACH_REGISTER_FÜLLEN3
 
+
+CLEAR_FIELD:
+	MOV R7, #00H
+	MOV R6, #00H
+	MOV R5, #00H
+	RETI
 
 
 DISPLAY_BOARD:
