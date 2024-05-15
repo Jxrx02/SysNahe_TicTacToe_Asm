@@ -13,15 +13,8 @@ ORG 0H   ; Startadresse des Programms
 MOV P1, #00H  	; Konfiguriere Port 1 als Ausgangsport für LED-Matrix
 MOV P2, #00H  	; Konfiguriere Port 2 als Ausgangsport für LED-Matrix
 
-;Bits für Interrupt
-SETB EA
-
-SETB EX0 	; Setzte Bit EX0 für Interruptfreigabe (Port 3.2)
-SETB PX0	; Setzte Priorität für Interruptfreigabe (Port 3.2)
-
-
-call INIT_BOARD
-call MAIN_LOOP
+LJMP INIT_BOARD
+LJMP MAIN_LOOP
 ;-----------------------------------------------------------------------
 ;ISR  <--- IRGENDETWAS LÄUFT HIER NOCH SCHIEF -> Bei Lausen Nachfragen
 ;-----------------------------------------------------------------------
@@ -38,6 +31,11 @@ reti ; return from interupt; remove interrupt-bit
 
 
 INIT_BOARD:
+	;Bits für Interrupt
+	SETB IT0  ; Externer Interrupt reagiert auf fallende Flanke an P3.2
+	SETB EX0  ; Externen Interrupt aktivieren
+	SETB EA   ; Interrupts generell zulassen
+	 ; --- ab hier reagiert der µC auf den externen Interrupt 0
     	mov r7, #00000000b	;00 0 00 0 10
 				;00 0 00 0 10    	wenn x < 3 -> R7
 				;00 0 00 0 00
@@ -55,11 +53,13 @@ MAIN_LOOP:
 	;-----------------------------------------------------------------------
    	JB P0.7, ON_INPUT 
 
-	call DISPLAY_BOARD
+	LJMP DISPLAY_BOARD
+
     	JMP MAIN_LOOP 
 
 
 ON_INPUT:
+	;CPL P0.7
     	MOV a, P0
     	ANL a, #00FH ; bitweise &-Verknüpfung, um nur die letzten 4 Bits (P0.0-P0.3) auszuwerten
     	MOV R0, a
@@ -84,8 +84,11 @@ ON_INPUT:
 	; x < 3
 	LESS_THAN_3: 
 		MOV R2, A; register für zähler der foor loop
-		; wenn Bit für S1 gesetzt ist, so schreibe #00000011b, ansonsten #00000001b
-		MOV A, #00000011b
+		; wenn Bit P3.7 gesetzt ist, so schreibe #00000001b (Spieler 2), ansonsten #00000011b (Spieler1)
+		JB P3.7, WRITE_PLAYER_2_INTO_FIELD
+		JNB P3.7, WRITE_PLAYER_1_INTO_FIELD
+		NACH_REGISTER_FÜLLEN1:
+		CPL P3.7
 		xch A,R2		; dopppelte Vertauschung notwendig!!
 		JBC C,SUM_LOOP_3
 		
@@ -110,7 +113,10 @@ ON_INPUT:
 	; 3 < x < 6
 	LESS_THAN_6: 
 		MOV R2, A
-		MOV A, #00000011b
+		JB P3.7, WRITE_PLAYER_2_INTO_FIELD2
+		JNB P3.7, WRITE_PLAYER_1_INTO_FIELD2
+		NACH_REGISTER_FÜLLEN2:
+		CPL P3.7
 		xch A,R2		
 		JBC C,SUM_LOOP_6
 
@@ -137,7 +143,10 @@ ON_INPUT:
 	; 6< x < 9
 	LESS_THAN_9: 
 		MOV R2, A
-		MOV A, #00000011b
+		JB P3.7, WRITE_PLAYER_2_INTO_FIELD3
+		JNB P3.7, WRITE_PLAYER_1_INTO_FIELD3
+		NACH_REGISTER_FÜLLEN3:
+		CPL P3.7
 		xch A,R2	
 		JBC C,SUM_LOOP_9
 
@@ -158,7 +167,27 @@ ON_INPUT:
 		JNZ SUM_LOOP_9  	
 		JZ JoaNhBinZuUnkreativ3
 
-	
+; Das hier ist bisschen unschön, aber es muss zu der jeweiligen Adresse im 'IF' zurückgesprungen werden
+WRITE_PLAYER_1_INTO_FIELD:
+	MOV A, #00000011b
+	JMP NACH_REGISTER_FÜLLEN1
+WRITE_PLAYER_2_INTO_FIELD:
+	MOV A, #00000001b
+	JMP NACH_REGISTER_FÜLLEN1
+
+WRITE_PLAYER_1_INTO_FIELD2:
+	MOV A, #00000011b
+	JMP NACH_REGISTER_FÜLLEN2
+WRITE_PLAYER_2_INTO_FIELD2:
+	MOV A, #00000001b
+	JMP NACH_REGISTER_FÜLLEN2
+
+WRITE_PLAYER_1_INTO_FIELD3:
+	MOV A, #00000011b
+	JMP NACH_REGISTER_FÜLLEN3
+WRITE_PLAYER_2_INTO_FIELD3:
+	MOV A, #00000001b
+	JMP NACH_REGISTER_FÜLLEN3
 
 
 
@@ -201,7 +230,7 @@ DISPLAY_BOARD:
 	    	setb P1.7
 
 
-		call main_loop	
+		LJMP main_loop	
 
 
 

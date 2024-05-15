@@ -14,200 +14,229 @@ tictactoe                                                                       
 0000 759000             13     MOV P1, #00H    ; Konfiguriere Port 1 als Ausgangsport für LED-Matrix
 0003 75A000             14     MOV P2, #00H    ; Konfiguriere Port 2 als Ausgangsport für LED-Matrix
                         15
-                        16     ;Bits für Interrupt
-0006 D2AF               17     SETB EA
-                        18     ;SETB IE0       ; Setzte Bit IE1 für Interruptfreigabe 3.2
-0008 D2A8               19     SETB EX0        ; Setzte Bit EX0 für Interruptfreigabe (Port 3.2)
-000A D2B8               20     SETB PX0        ; Setzte Priorität für Interruptfreigabe (Port 3.2)
-                        21
-                        22
-000C 120017             23     call INIT_BOARD
-000F 12001D             24     call MAIN_LOOP
-                        25     ;-----------------------------------------------------------------------
-                        26     ;ISR
+0006 020017             16     LJMP INIT_BOARD
+0009 020023             17     LJMP MAIN_LOOP
+                        18     ;-----------------------------------------------------------------------
+                        19     ;ISR  <--- IRGENDETWAS LÄUFT HIER NOCH SCHIEF -> Bei Lausen Nachfragen
+                        20     ;-----------------------------------------------------------------------
+                        21     ORG 13H ; adresse von interrupt 3.2
+0013 12002B             22     call ON_INPUT
+0016 32                 23     reti ; return from interupt; remove interrupt-bit
+                        24
+                        25
+                        26
                         27     ;-----------------------------------------------------------------------
-                        28     ORG 13H ; adresse von interrupt 3.2
-0013 120025             29     call ON_INPUT
-0016 32                 30     reti ; return from interupt; remove interrupt-bit
+                        28     ; Logik
+                        29     ;-----------------------------------------------------------------------
+                        30
                         31
                         32
-                        33
-                        34     ;-----------------------------------------------------------------------
-                        35     ; Logik
-                        36     ;-----------------------------------------------------------------------
-                        37
-                        38
-                        39
-                        40     INIT_BOARD:
-0017 7F00               41             mov r7, #00000000b      ;00 0 00 0 10
-                        42                                     ;00 0 00 0 10           wenn x < 3 -> R7
-                        43                                     ;00 0 00 0 00
-0019 7E00               44             mov r6, #00000000b      ;11 0 10 0 00
-                        45                                     ;11 0 10 0 00           wenn x < 6 -> R6
-                        46                                     ;00 0 00 0 00
-001B 7D00               47             mov r5, #00000000b      ;11 0 00 0 00
-                        48                                     ;11 0 00 0 00           sonst R5
+                        33     INIT_BOARD:
+                        34             ;Bits für Interrupt
+0017 D288               35             SETB IT0  ; Externer Interrupt reagiert auf fallende Flanke an P3.2
+0019 D2A8               36             SETB EX0  ; Externen Interrupt aktivieren
+001B D2AF               37             SETB EA   ; Interrupts generell zulassen
+                        38              ; --- ab hier reagiert der µC auf den externen Interrupt 0
+001D 7F00               39             mov r7, #00000000b      ;00 0 00 0 10
+                        40                                     ;00 0 00 0 10           wenn x < 3 -> R7
+                        41                                     ;00 0 00 0 00
+001F 7E00               42             mov r6, #00000000b      ;11 0 10 0 00
+                        43                                     ;11 0 10 0 00           wenn x < 6 -> R6
+                        44                                     ;00 0 00 0 00
+0021 7D00               45             mov r5, #00000000b      ;11 0 00 0 00
+                        46                                     ;11 0 00 0 00           sonst R5
+                        47
+                        48
                         49
-                        50
-                        51
-                        52     MAIN_LOOP:
+                        50     MAIN_LOOP:
+                        51             ;-----------------------------------------------------------------------
+                        52                 ; ON_INPUT: Wird P0.7 betätigt, so wird Port P0 (P0.0-P0.3) eingelesen -> liefert Dezimal
                         53             ;-----------------------------------------------------------------------
-                        54                 ; ON_INPUT: Wird P0.7 betätigt, so wird Port P0 (P0.0-P0.3) eingelesen -> liefert Dezimal
-                        55             ;-----------------------------------------------------------------------
-001D 208705             56             JB P0.7, ON_INPUT
+0023 208705             54             JB P0.7, ON_INPUT
+                        55
+0026 0200AE             56             LJMP DISPLAY_BOARD
                         57
-0020 12007E             58             call DISPLAY_BOARD
-0023 80F8               59             JMP MAIN_LOOP
+0029 80F8               58             JMP MAIN_LOOP
+                        59
                         60
-                        61
-                        62     ON_INPUT:
-0025 E580               63             MOV a, P0
-0027 540F               64             ANL a, #00FH ; bitweise &-Verknüpfung, um nur die letzten 4 Bits (P0.0-P0.3) auszuwerten
-0029 F8                 65             MOV R0, a
+                        61     ON_INPUT:
+                        62             ;CPL P0.7
+002B E580               63             MOV a, P0
+002D 540F               64             ANL a, #00FH ; bitweise &-Verknüpfung, um nur die letzten 4 Bits (P0.0-P0.3) auszuwerten
+002F F8                 65             MOV R0, a
                         66             ;-----------------------------------------------------------------------
                         67                 ; Mappe Feld auf 8x8 Matrix
                         68                 ; => R0 enthält den Wert des zu setztenden Feldes
                         69             ;-----------------------------------------------------------------------
                         70             ; x < 3
-002A 9403               71             SUBB A, #03h; Idee: 8-3 >0; 5-3>0; 2-3 = -1 Setze Carry oder wenn akku leer, springe auf schl
-002C 400E               72             JC LESS_THAN_3 ; x<3 -> schreibe in R7
-002E 600C               73             JZ LESS_THAN_3
+0030 9403               71             SUBB A, #03h; Idee: 8-3 >0; 5-3>0; 2-3 = -1 Setze Carry oder wenn akku leer, springe auf schl
+0032 400E               72             JC LESS_THAN_3 ; x<3 -> schreibe in R7
+0034 600C               73             JZ LESS_THAN_3
                         74
                         75             ; 3 < x < 6
-0030 9403               76             SUBB A, #03h
-0032 401E               77             JC LESS_THAN_6 ; x<6 -> schreibe in R6
-0034 601C               78             JZ LESS_THAN_6
+0036 9403               76             SUBB A, #03h
+0038 4024               77             JC LESS_THAN_6 ; x<6 -> schreibe in R6
+003A 6022               78             JZ LESS_THAN_6
                         79             ; 6< x < 9
-0036 9403               80             SUBB A, #03h
-0038 402E               81             JC LESS_THAN_9 ; x<6 -> schreibe in R6
-003A 602C               82             JZ LESS_THAN_9
+003C 9403               80             SUBB A, #03h
+003E 403A               81             JC LESS_THAN_9 ; x<6 -> schreibe in R6
+0040 6038               82             JZ LESS_THAN_9
                         83
                         84             ; x < 3
                         85             LESS_THAN_3:
-003C FA                 86                     MOV R2, A; register für zähler der foor loop
-                        87                     ; wenn Bit für S1 gesetzt ist, so schreibe #00000011b, ansonsten #00000001b
-003D 7403               88                     MOV A, #00000011b
-003F CA                 89                     xch A,R2                ; dopppelte Vertauschung notwendig!!
-0040 10D705             90                     JBC C,SUM_LOOP_3
-                        91
-                        92                     JoaNhBinZuUnkreativ1:
-0043 CA                 93                             xch A,R2                ;tausche A mit R2
-0044 4F                 94                             ORL A, R7               ;schreibe wert in TicTacToeFeld mit |-Verknüpfung
-0045 FF                 95                             MOV R7, A               ;speichere Wert in Register zwischen
-0046 80D5               96                             JMP MAIN_LOOP
-                        97                             ;RET                    ;RET, wenn Interrupt verwendet wird
-                        98
-                        99             SUM_LOOP_3:
-0048 CA                100                     xch A,R2
-0049 0A                101                     INC R2                  ; Inkrementiere den Zählerwert für die nächste Iteration
-004A 23                102                     RL A            ;rotiere akku um 3 Stellen je übertrag
-004B 23                103                     RL A
-004C 23                104                     RL A
-004D CA                105                     xch A,R2                ;tausche A(kku) mit R2
-004E 70F8              106                     JNZ SUM_LOOP_3          ; springe zurück zur Schleife, wenn r2 != 0
-0050 60F1              107                     JZ JoaNhBinZuUnkreativ1
-                       108
-                       109             ;-----------------------------------------------------------------------
-                       110             ; 3 < x < 6
-                       111             LESS_THAN_6:
-0052 FA                112                     MOV R2, A
-0053 7403              113                     MOV A, #00000011b
-0055 CA                114                     xch A,R2
-0056 10D705            115                     JBC C,SUM_LOOP_6
-                       116
-                       117                     JoaNhBinZuUnkreativ2:
-0059 CA                118                             xch A,R2
-005A 4E                119                             ORL A, R6
-005B FE                120                             MOV R6, A
-005C 80BF              121                             JMP MAIN_LOOP
-                       122                             ;RET            RET, wenn Interrupt verwendet wird
-                       123
-                       124             SUM_LOOP_6:
-005E CA                125                     xch A,R2
-005F 0A                126                     INC R2
-0060 23                127                     RL A
-0061 23                128                     RL A
-0062 23                129                     RL A
-0063 CA                130                     xch A,R2
-0064 70F8              131                     JNZ SUM_LOOP_6
-0066 60F1              132                     JZ JoaNhBinZuUnkreativ2
-                       133
-                       134
-                       135
-                       136             ;-----------------------------------------------------------------------
-                       137             ; 6< x < 9
-                       138             LESS_THAN_9:
-0068 FA                139                     MOV R2, A
-0069 7403              140                     MOV A, #00000011b
-006B CA                141                     xch A,R2
-006C 10D705            142                     JBC C,SUM_LOOP_9
-                       143
-                       144                     JoaNhBinZuUnkreativ3:
-006F CA                145                             xch A,R2
-0070 4D                146                             ORL A, R5
-0071 FD                147                             MOV R5, A
-0072 80A9              148                             JMP MAIN_LOOP
-                       149                             ;RET
-                       150
-                       151             SUM_LOOP_9:
-0074 CA                152                     xch A,R2
-0075 0A                153                     INC R2
-0076 23                154                     RL A
-0077 23                155                     RL A
-0078 23                156                     RL A
-0079 CA                157                     xch A,R2
-007A 70F8              158                     JNZ SUM_LOOP_9
-007C 60F1              159                     JZ JoaNhBinZuUnkreativ3
-                       160
-                       161
-                       162
-                       163
-                       164
-                       165     DISPLAY_BOARD:
-                       166             ;-----------------------------------------------------------------------
-                       167                 ; Zeige R7,R6,R5 nacheinander gemultiplext an
-                       168                 ; R7, R6, R5 spiegeln das Feld wider, x die Eingabe aus R0 von Funktion ON_INPUT (Wird au
-                       169             ;-----------------------------------------------------------------------
-                       170
-                       171
-                       172
-007E 759000            173             MOV P1, #00000000b ;setze p1 standardgemäß auf 0
-                       174             ;display0:
-0081 8FA0              175                     MOV P2, R7
-0083 D290              176                     setb P1.0
-0085 109000            177                     JBC P1.0,display1
-                       178             display1:
-                       179                     ;MOV P2, R7
-0088 D291              180                     setb P1.1
-008A 109100            181                     JBC P1.1,display2
-                       182             display2:
-                       183                     ;MOV P2, #00000000b
-008D D292              184                     setb P1.2
-008F 109200            185                     JBC P1.2,display3
-0092 8EA0              186             display3: MOV P2, R6
-0094 D293              187                     setb P1.3
-0096 109300            188                     JBC P1.3,display4
-                       189             display4:
-0099 D294              190                     setb P1.4
-009B 109400            191                     JBC P1.4,display5
-                       192             display5:
-                       193                     ;MOV P2, #00000000b
-009E D295              194                     setb P1.5
-00A0 109500            195                     JBC P1.5,display6
-                       196             display6:
-00A3 8DA0              197                     MOV P2, R5
-00A5 D296              198                     setb P1.6
-00A7 109600            199                     JBC P1.6,display7
-                       200             display7:
-00AA D297              201                     setb P1.7
-                       202
-                       203
-00AC 111D              204                     call main_loop
-                       205
-                       206
-                       207
-                       208
-                       209     END
+0042 FA                 86                     MOV R2, A; register für zähler der foor loop
+                        87                     ; wenn Bit P3.7 gesetzt ist, so schreibe #00000001b (Spieler 2), ansonsten #00000011b
+0043 20B754             88                     JB P3.7, WRITE_PLAYER_2_INTO_FIELD
+0046 30B74D             89                     JNB P3.7, WRITE_PLAYER_1_INTO_FIELD
+                        90                     NACH_REGISTER_FÜLLEN1:
+0049 B2B7               91                     CPL P3.7
+004B CA                 92                     xch A,R2                ; dopppelte Vertauschung notwendig!!
+004C 10D705             93                     JBC C,SUM_LOOP_3
+                        94
+                        95                     JoaNhBinZuUnkreativ1:
+004F CA                 96                             xch A,R2                ;tausche A mit R2
+0050 4F                 97                             ORL A, R7               ;schreibe wert in TicTacToeFeld mit |-Verknüpfung
+0051 FF                 98                             MOV R7, A               ;speichere Wert in Register zwischen
+0052 80CF               99                             JMP MAIN_LOOP
+                       100                             ;RET                    ;RET, wenn Interrupt verwendet wird
+                       101
+                       102             SUM_LOOP_3:
+0054 CA                103                     xch A,R2
+0055 0A                104                     INC R2                  ; Inkrementiere den Zählerwert für die nächste Iteration
+0056 23                105                     RL A            ;rotiere akku um 3 Stellen je übertrag
+0057 23                106                     RL A
+0058 23                107                     RL A
+0059 CA                108                     xch A,R2                ;tausche A(kku) mit R2
+005A 70F8              109                     JNZ SUM_LOOP_3          ; springe zurück zur Schleife, wenn r2 != 0
+005C 60F1              110                     JZ JoaNhBinZuUnkreativ1
+                       111
+                       112             ;-----------------------------------------------------------------------
+                       113             ; 3 < x < 6
+                       114             LESS_THAN_6:
+005E FA                115                     MOV R2, A
+005F 20B740            116                     JB P3.7, WRITE_PLAYER_2_INTO_FIELD2
+0062 30B739            117                     JNB P3.7, WRITE_PLAYER_1_INTO_FIELD2
+                       118                     NACH_REGISTER_FÜLLEN2:
+0065 B2B7              119                     CPL P3.7
+0067 CA                120                     xch A,R2
+0068 10D705            121                     JBC C,SUM_LOOP_6
+                       122
+                       123                     JoaNhBinZuUnkreativ2:
+006B CA                124                             xch A,R2
+006C 4E                125                             ORL A, R6
+006D FE                126                             MOV R6, A
+006E 80B3              127                             JMP MAIN_LOOP
+                       128                             ;RET            RET, wenn Interrupt verwendet wird
+                       129
+                       130             SUM_LOOP_6:
+0070 CA                131                     xch A,R2
+0071 0A                132                     INC R2
+0072 23                133                     RL A
+0073 23                134                     RL A
+0074 23                135                     RL A
+0075 CA                136                     xch A,R2
+0076 70F8              137                     JNZ SUM_LOOP_6
+0078 60F1              138                     JZ JoaNhBinZuUnkreativ2
+                       139
+                       140
+                       141
+                       142             ;-----------------------------------------------------------------------
+                       143             ; 6< x < 9
+                       144             LESS_THAN_9:
+007A FA                145                     MOV R2, A
+007B 20B72C            146                     JB P3.7, WRITE_PLAYER_2_INTO_FIELD3
+007E 30B725            147                     JNB P3.7, WRITE_PLAYER_1_INTO_FIELD3
+                       148                     NACH_REGISTER_FÜLLEN3:
+0081 B2B7              149                     CPL P3.7
+0083 CA                150                     xch A,R2
+0084 10D705            151                     JBC C,SUM_LOOP_9
+                       152
+                       153                     JoaNhBinZuUnkreativ3:
+0087 CA                154                             xch A,R2
+0088 4D                155                             ORL A, R5
+0089 FD                156                             MOV R5, A
+008A 8097              157                             JMP MAIN_LOOP
+                       158                             ;RET
+                       159
+                       160             SUM_LOOP_9:
+008C CA                161                     xch A,R2
+008D 0A                162                     INC R2
+008E 23                163                     RL A
+008F 23                164                     RL A
+0090 23                165                     RL A
+0091 CA                166                     xch A,R2
+0092 70F8              167                     JNZ SUM_LOOP_9
+0094 60F1              168                     JZ JoaNhBinZuUnkreativ3
+                       169
+                       170     ; Das hier ist bisschen unschön, aber es muss zu der jeweiligen Adresse im 'IF' zurückgesprungen werd
+                       171     WRITE_PLAYER_1_INTO_FIELD:
+0096 7403              172             MOV A, #00000011b
+0098 80AF              173             JMP NACH_REGISTER_FÜLLEN1
+                       174     WRITE_PLAYER_2_INTO_FIELD:
+009A 7401              175             MOV A, #00000001b
+009C 80AB              176             JMP NACH_REGISTER_FÜLLEN1
+                       177
+                       178     WRITE_PLAYER_1_INTO_FIELD2:
+009E 7403              179             MOV A, #00000011b
+00A0 80C3              180             JMP NACH_REGISTER_FÜLLEN2
+                       181     WRITE_PLAYER_2_INTO_FIELD2:
+00A2 7401              182             MOV A, #00000001b
+00A4 80BF              183             JMP NACH_REGISTER_FÜLLEN2
+                       184
+                       185     WRITE_PLAYER_1_INTO_FIELD3:
+00A6 7403              186             MOV A, #00000011b
+00A8 80D7              187             JMP NACH_REGISTER_FÜLLEN3
+                       188     WRITE_PLAYER_2_INTO_FIELD3:
+00AA 7401              189             MOV A, #00000001b
+00AC 80D3              190             JMP NACH_REGISTER_FÜLLEN3
+                       191
+                       192
+                       193
+                       194     DISPLAY_BOARD:
+                       195             ;-----------------------------------------------------------------------
+                       196                 ; Zeige R7,R6,R5 nacheinander gemultiplext an
+                       197                 ; R7, R6, R5 spiegeln das Feld wider, x die Eingabe aus R0 von Funktion ON_INPUT (Wird au
+                       198             ;-----------------------------------------------------------------------
+                       199
+                       200
+                       201
+00AE 759000            202             MOV P1, #00000000b ;setze p1 standardgemäß auf 0
+                       203             ;display0:
+00B1 8FA0              204                     MOV P2, R7
+00B3 D290              205                     setb P1.0
+00B5 109000            206                     JBC P1.0,display1
+                       207             display1:
+                       208                     ;MOV P2, R7
+00B8 D291              209                     setb P1.1
+00BA 109100            210                     JBC P1.1,display2
+                       211             display2:
+                       212                     ;MOV P2, #00000000b
+00BD D292              213                     setb P1.2
+00BF 109200            214                     JBC P1.2,display3
+00C2 8EA0              215             display3: MOV P2, R6
+00C4 D293              216                     setb P1.3
+00C6 109300            217                     JBC P1.3,display4
+                       218             display4:
+00C9 D294              219                     setb P1.4
+00CB 109400            220                     JBC P1.4,display5
+                       221             display5:
+                       222                     ;MOV P2, #00000000b
+00CE D295              223                     setb P1.5
+00D0 109500            224                     JBC P1.5,display6
+                       225             display6:
+00D3 8DA0              226                     MOV P2, R5
+00D5 D296              227                     setb P1.6
+00D7 109600            228                     JBC P1.6,display7
+                       229             display7:
+00DA D297              230                     setb P1.7
+                       231
+                       232
+00DC 020023            233                     LJMP main_loop
+                       234
+                       235
+                       236
+                       237
+                       238     END
 ASSEMBLY COMPLETE, NO ERRORS FOUND, NO WARNINGS
 
 
@@ -265,14 +294,14 @@ CPRL2. . . . . . . . . . . . . . . .  B  ADDR  00C8H  NOT USED
 CR . . . . . . . . . . . . . . . . .  B  ADDR  00DEH  NOT USED
 CT2. . . . . . . . . . . . . . . . .  B  ADDR  00C9H  NOT USED
 CY . . . . . . . . . . . . . . . . .  B  ADDR  00D7H  NOT USED
-DISPLAY1 . . . . . . . . . . . . . .  C  ADDR  0088H
-DISPLAY2 . . . . . . . . . . . . . .  C  ADDR  008DH
-DISPLAY3 . . . . . . . . . . . . . .  C  ADDR  0092H
-DISPLAY4 . . . . . . . . . . . . . .  C  ADDR  0099H
-DISPLAY5 . . . . . . . . . . . . . .  C  ADDR  009EH
-DISPLAY6 . . . . . . . . . . . . . .  C  ADDR  00A3H
-DISPLAY7 . . . . . . . . . . . . . .  C  ADDR  00AAH
-DISPLAY_BOARD. . . . . . . . . . . .  C  ADDR  007EH
+DISPLAY1 . . . . . . . . . . . . . .  C  ADDR  00B8H
+DISPLAY2 . . . . . . . . . . . . . .  C  ADDR  00BDH
+DISPLAY3 . . . . . . . . . . . . . .  C  ADDR  00C2H
+DISPLAY4 . . . . . . . . . . . . . .  C  ADDR  00C9H
+DISPLAY5 . . . . . . . . . . . . . .  C  ADDR  00CEH
+DISPLAY6 . . . . . . . . . . . . . .  C  ADDR  00D3H
+DISPLAY7 . . . . . . . . . . . . . .  C  ADDR  00DAH
+DISPLAY_BOARD. . . . . . . . . . . .  C  ADDR  00AEH
 DP0H . . . . . . . . . . . . . . . .  D  ADDR  0083H  NOT USED
 DP0L . . . . . . . . . . . . . . . .  D  ADDR  0082H  NOT USED
 DP1H . . . . . . . . . . . . . . . .  D  ADDR  0085H  NOT USED
@@ -306,19 +335,22 @@ IPH0 . . . . . . . . . . . . . . . .  D  ADDR  00B7H  NOT USED
 IPH1 . . . . . . . . . . . . . . . .  D  ADDR  00B3H  NOT USED
 IPL0 . . . . . . . . . . . . . . . .  D  ADDR  00B8H  NOT USED
 IPL1 . . . . . . . . . . . . . . . .  D  ADDR  00B2H  NOT USED
-IT0. . . . . . . . . . . . . . . . .  B  ADDR  0088H  NOT USED
+IT0. . . . . . . . . . . . . . . . .  B  ADDR  0088H
 IT1. . . . . . . . . . . . . . . . .  B  ADDR  008AH  NOT USED
-JOANHBINZUUNKREATIV1 . . . . . . . .  C  ADDR  0043H
-JOANHBINZUUNKREATIV2 . . . . . . . .  C  ADDR  0059H
-JOANHBINZUUNKREATIV3 . . . . . . . .  C  ADDR  006FH
+JOANHBINZUUNKREATIV1 . . . . . . . .  C  ADDR  004FH
+JOANHBINZUUNKREATIV2 . . . . . . . .  C  ADDR  006BH
+JOANHBINZUUNKREATIV3 . . . . . . . .  C  ADDR  0087H
 KBE. . . . . . . . . . . . . . . . .  D  ADDR  009DH  NOT USED
 KBF. . . . . . . . . . . . . . . . .  D  ADDR  009EH  NOT USED
 KBLS . . . . . . . . . . . . . . . .  D  ADDR  009CH  NOT USED
-LESS_THAN_3. . . . . . . . . . . . .  C  ADDR  003CH
-LESS_THAN_6. . . . . . . . . . . . .  C  ADDR  0052H
-LESS_THAN_9. . . . . . . . . . . . .  C  ADDR  0068H
-MAIN_LOOP. . . . . . . . . . . . . .  C  ADDR  001DH
-ON_INPUT . . . . . . . . . . . . . .  C  ADDR  0025H
+LESS_THAN_3. . . . . . . . . . . . .  C  ADDR  0042H
+LESS_THAN_6. . . . . . . . . . . . .  C  ADDR  005EH
+LESS_THAN_9. . . . . . . . . . . . .  C  ADDR  007AH
+MAIN_LOOP. . . . . . . . . . . . . .  C  ADDR  0023H
+NACH_REGISTER_FÜLLEN1. . . . . . . .  C  ADDR  0049H
+NACH_REGISTER_FÜLLEN2. . . . . . . .  C  ADDR  0065H
+NACH_REGISTER_FÜLLEN3. . . . . . . .  C  ADDR  0081H
+ON_INPUT . . . . . . . . . . . . . .  C  ADDR  002BH
 OSCCON . . . . . . . . . . . . . . .  D  ADDR  0086H  NOT USED
 OV . . . . . . . . . . . . . . . . .  B  ADDR  00D2H  NOT USED
 P. . . . . . . . . . . . . . . . . .  B  ADDR  00D0H  NOT USED
@@ -327,7 +359,7 @@ P1 . . . . . . . . . . . . . . . . .  D  ADDR  0090H
 P1M1 . . . . . . . . . . . . . . . .  D  ADDR  00D4H  NOT USED
 P1M2 . . . . . . . . . . . . . . . .  D  ADDR  00E2H  NOT USED
 P2 . . . . . . . . . . . . . . . . .  D  ADDR  00A0H
-P3 . . . . . . . . . . . . . . . . .  D  ADDR  00B0H  NOT USED
+P3 . . . . . . . . . . . . . . . . .  D  ADDR  00B0H
 P3M1 . . . . . . . . . . . . . . . .  D  ADDR  00D5H  NOT USED
 P3M2 . . . . . . . . . . . . . . . .  D  ADDR  00E3H  NOT USED
 P4 . . . . . . . . . . . . . . . . .  D  ADDR  00C0H  NOT USED
@@ -346,7 +378,7 @@ PT1. . . . . . . . . . . . . . . . .  B  ADDR  00BBH  NOT USED
 PT1L . . . . . . . . . . . . . . . .  B  ADDR  00BBH  NOT USED
 PT2. . . . . . . . . . . . . . . . .  B  ADDR  00BDH  NOT USED
 PT2L . . . . . . . . . . . . . . . .  B  ADDR  00BDH  NOT USED
-PX0. . . . . . . . . . . . . . . . .  B  ADDR  00B8H
+PX0. . . . . . . . . . . . . . . . .  B  ADDR  00B8H  NOT USED
 PX0L . . . . . . . . . . . . . . . .  B  ADDR  00B8H  NOT USED
 PX1. . . . . . . . . . . . . . . . .  B  ADDR  00BAH  NOT USED
 PX1L . . . . . . . . . . . . . . . .  B  ADDR  00BAH  NOT USED
@@ -380,9 +412,9 @@ SPDAT. . . . . . . . . . . . . . . .  D  ADDR  00C5H  NOT USED
 SPDR . . . . . . . . . . . . . . . .  D  ADDR  0086H  NOT USED
 SPSR . . . . . . . . . . . . . . . .  D  ADDR  00AAH  NOT USED
 SPSTA. . . . . . . . . . . . . . . .  D  ADDR  00C4H  NOT USED
-SUM_LOOP_3 . . . . . . . . . . . . .  C  ADDR  0048H
-SUM_LOOP_6 . . . . . . . . . . . . .  C  ADDR  005EH
-SUM_LOOP_9 . . . . . . . . . . . . .  C  ADDR  0074H
+SUM_LOOP_3 . . . . . . . . . . . . .  C  ADDR  0054H
+SUM_LOOP_6 . . . . . . . . . . . . .  C  ADDR  0070H
+SUM_LOOP_9 . . . . . . . . . . . . .  C  ADDR  008CH
 T0 . . . . . . . . . . . . . . . . .  B  ADDR  00B4H  NOT USED
 T1 . . . . . . . . . . . . . . . . .  B  ADDR  00B5H  NOT USED
 T2CON. . . . . . . . . . . . . . . .  D  ADDR  00C8H  NOT USED
@@ -412,3 +444,9 @@ WDTCON . . . . . . . . . . . . . . .  D  ADDR  00A7H  NOT USED
 WDTPRG . . . . . . . . . . . . . . .  D  ADDR  00A7H  NOT USED
 WDTRST . . . . . . . . . . . . . . .  D  ADDR  00A6H  NOT USED
 WR . . . . . . . . . . . . . . . . .  B  ADDR  00B6H  NOT USED
+WRITE_PLAYER_1_INTO_FIELD. . . . . .  C  ADDR  0096H
+WRITE_PLAYER_1_INTO_FIELD2 . . . . .  C  ADDR  009EH
+WRITE_PLAYER_1_INTO_FIELD3 . . . . .  C  ADDR  00A6H
+WRITE_PLAYER_2_INTO_FIELD. . . . . .  C  ADDR  009AH
+WRITE_PLAYER_2_INTO_FIELD2 . . . . .  C  ADDR  00A2H
+WRITE_PLAYER_2_INTO_FIELD3 . . . . .  C  ADDR  00AAH
