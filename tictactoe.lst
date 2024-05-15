@@ -19,7 +19,7 @@ tictactoe                                                                       
                         18     ;-----------------------------------------------------------------------
                         19     ;ISR  <--- IRGENDETWAS LÄUFT HIER NOCH SCHIEF -> Bei Lausen Nachfragen
                         20     ;-----------------------------------------------------------------------
-                        21     ORG 13H ; adresse von interrupt 3.2
+                        21     ORG 13H ; 03H ist die eigentliche adresse von interrupt 3.2, aber führt zu fehler
 0013 12002B             22     call ON_INPUT
 0016 32                 23     reti ; return from interupt; remove interrupt-bit
                         24
@@ -91,7 +91,7 @@ tictactoe                                                                       
                         90                     NACH_REGISTER_FÜLLEN1:
 0049 B2B7               91                     CPL P3.7
 004B CA                 92                     xch A,R2                ; dopppelte Vertauschung notwendig!!
-004C 10D705             93                     JBC C,SUM_LOOP_3
+004C 10D705             93                     JBC CY,SUM_LOOP_3
                         94
                         95                     JoaNhBinZuUnkreativ1:
 004F CA                 96                             xch A,R2                ;tausche A mit R2
@@ -119,7 +119,7 @@ tictactoe                                                                       
                        118                     NACH_REGISTER_FÜLLEN2:
 0065 B2B7              119                     CPL P3.7
 0067 CA                120                     xch A,R2
-0068 10D705            121                     JBC C,SUM_LOOP_6
+0068 10D705            121                     JBC CY,SUM_LOOP_6
                        122
                        123                     JoaNhBinZuUnkreativ2:
 006B CA                124                             xch A,R2
@@ -149,7 +149,7 @@ tictactoe                                                                       
                        148                     NACH_REGISTER_FÜLLEN3:
 0081 B2B7              149                     CPL P3.7
 0083 CA                150                     xch A,R2
-0084 10D705            151                     JBC C,SUM_LOOP_9
+0084 10D705            151                     JBC CY,SUM_LOOP_9
                        152
                        153                     JoaNhBinZuUnkreativ3:
 0087 CA                154                             xch A,R2
@@ -293,7 +293,7 @@ CMOD . . . . . . . . . . . . . . . .  D  ADDR  00D9H  NOT USED
 CPRL2. . . . . . . . . . . . . . . .  B  ADDR  00C8H  NOT USED
 CR . . . . . . . . . . . . . . . . .  B  ADDR  00DEH  NOT USED
 CT2. . . . . . . . . . . . . . . . .  B  ADDR  00C9H  NOT USED
-CY . . . . . . . . . . . . . . . . .  B  ADDR  00D7H  NOT USED
+CY . . . . . . . . . . . . . . . . .  B  ADDR  00D7H
 DISPLAY1 . . . . . . . . . . . . . .  C  ADDR  00B8H
 DISPLAY2 . . . . . . . . . . . . . .  C  ADDR  00BDH
 DISPLAY3 . . . . . . . . . . . . . .  C  ADDR  00C2H

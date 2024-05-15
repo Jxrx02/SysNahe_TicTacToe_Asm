@@ -18,7 +18,7 @@ LJMP MAIN_LOOP
 ;-----------------------------------------------------------------------
 ;ISR  <--- IRGENDETWAS LÄUFT HIER NOCH SCHIEF -> Bei Lausen Nachfragen
 ;-----------------------------------------------------------------------
-ORG 13H ; adresse von interrupt 3.2
+ORG 13H ; 03H ist die eigentliche adresse von interrupt 3.2, aber führt zu fehler
 call ON_INPUT
 reti ; return from interupt; remove interrupt-bit
 
@@ -90,7 +90,7 @@ ON_INPUT:
 		NACH_REGISTER_FÜLLEN1:
 		CPL P3.7
 		xch A,R2		; dopppelte Vertauschung notwendig!!
-		JBC C,SUM_LOOP_3
+		JBC CY,SUM_LOOP_3
 		
 		JoaNhBinZuUnkreativ1:
 			xch A,R2		;tausche A mit R2
@@ -118,7 +118,7 @@ ON_INPUT:
 		NACH_REGISTER_FÜLLEN2:
 		CPL P3.7
 		xch A,R2		
-		JBC C,SUM_LOOP_6
+		JBC CY,SUM_LOOP_6
 
 		JoaNhBinZuUnkreativ2:
 			xch A,R2		
@@ -148,7 +148,7 @@ ON_INPUT:
 		NACH_REGISTER_FÜLLEN3:
 		CPL P3.7
 		xch A,R2	
-		JBC C,SUM_LOOP_9
+		JBC CY,SUM_LOOP_9
 
 		JoaNhBinZuUnkreativ3:
 			xch A,R2	

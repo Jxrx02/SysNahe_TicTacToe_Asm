@@ -19,7 +19,7 @@ tictactoe                                                                       
                         18     ;-----------------------------------------------------------------------
                         19     ;ISR  <--- IRGENDETWAS LÄUFT HIER NOCH SCHIEF -> Bei Lausen Nachfragen
                         20     ;-----------------------------------------------------------------------
-                        21     ORG 13H ; adresse von interrupt 3.2
+                        21     ORG 13H ; 03H ist die eigentliche adresse von interrupt 3.2, aber führt zu fehler
 0013 12002B             22     call ON_INPUT
 0016 32                 23     reti ; return from interupt; remove interrupt-bit
                         24
@@ -54,7 +54,7 @@ tictactoe                                                                       
                         53             ;-----------------------------------------------------------------------
 0023 208705             54             JB P0.7, ON_INPUT
                         55
-0026 1200AE             56             call DISPLAY_BOARD
+0026 0200AE             56             LJMP DISPLAY_BOARD
                         57
 0029 80F8               58             JMP MAIN_LOOP
                         59
@@ -231,7 +231,7 @@ tictactoe                                                                       
 00DA D297              230                     setb P1.7
                        231
                        232
-00DC 1123              233                     call main_loop
+00DC 020023            233                     LJMP main_loop
                        234
                        235
                        236
