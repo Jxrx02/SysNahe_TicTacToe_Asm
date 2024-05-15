@@ -1,7 +1,6 @@
 ## ⚒TODOs🛠: 
-* Interrupt für Eingabe von Feld -> Anzeige vom Display soll unterbrochen werden
-* 2 Spieler -> Spieler 1 hat das ganze Feld ausgemalt und Spieler 2 diagonale (sowas /)
 * Timer zum reagieren?
+* 2. Interrupt um spielfeld zurückzusetzten
   
 
 ## 1. Virtuelle HW laden
