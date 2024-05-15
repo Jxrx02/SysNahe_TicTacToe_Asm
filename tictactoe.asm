@@ -47,8 +47,7 @@ MAIN_LOOP:
 	;-----------------------------------------------------------------------
 	    ; ON_INPUT: Wird P3.2 betätigt, so wird Port P0 (P0.0-P0.3) eingelesen -> liefert Dezimalwert in R0
 	;-----------------------------------------------------------------------
-	LJMP DISPLAY_BOARD
-
+	LCALL DISPLAY_BOARD
     	JMP MAIN_LOOP 
 
 
@@ -93,7 +92,7 @@ ON_INPUT:
 			xch A,R2		;tausche A mit R2
 			XRL A, R7		;schreibe wert in TicTacToeFeld mit exclusiv-oder-Verknüpfung
 			MOV R7, A 		;speichere Wert in Register zwischen
-
+			LCALL CHECK_FOR_WIN
 			RETI			;return from interupt; remove interrupt-bit
 
 	SUM_LOOP_3:
@@ -121,7 +120,7 @@ ON_INPUT:
 			xch A,R2		
 			XRL A, R6	
 			MOV R6, A 		
-
+			LCALL CHECK_FOR_WIN
 			RETI		
 				
 	SUM_LOOP_6:
@@ -151,7 +150,7 @@ ON_INPUT:
 			xch A,R2	
 			XRL A, R5	
 			MOV R5, A 		
-
+			LCALL CHECK_FOR_WIN
 			RETI
 				
 	SUM_LOOP_9:
@@ -194,25 +193,89 @@ CLEAR_FIELD:
 	RETI
 
 CHECK_FOR_WIN:
-;Waagerechte
-;a: Für Spieler 2 (Ganzes Feld) für jedes Register (5-7) addiere 1 und prüfe ob Carry gesetzt wird, wenn Carry, dann add zählerstand
-;b: Für Spieler 1 vorher noch #10101010b mit or-verknüpfung, dann a: mit anderen zählerstand (auswertung über Port 3.7, um Spieler herauszufinden)
+	LJMP CHECK_HORIZONTAL
 
-;Senkrechte
-;a: für Register R7, R6, R5 jeweils &-Verknüpfung #01X00000b; 
-;b: schreibe Register nacheinander (R7 nach R5) in alu; xor mit #01X01X01 -> wenn ALU #00000000, dann add zählerstand
-;c - das gleiche noch mit den anderen reihen dann #00X01X00, dann #00X00X01 &
+	CHECK_HORIZONTAL:
+	;Waagerechte
+	;a: Für Spieler 2 (Ganzes Feld) für jedes Register (5-7), |-Verknüpfung mit 00100100, addiere 1 und prüfe ob Carry gesetzt wird, wenn Carry, dann add zählerstand
+	;b: Für Spieler 1 vorher noch #10101010b mit or-verknüpfung, dann a: mit anderen zählerstand
+		;Spieler mit ganzen Feldern
+		MOV A, R7
+		ORL A, #00100100b
+		INC A
+		JZ INC_COUNTER_1
+		
+		MOV A, R6
+		ORL A, #00100100b
+		INC A
+		JZ INC_COUNTER_1
+	
+		MOV A, R5
+		ORL A, #00100100b
+		INC A
+		JZ INC_COUNTER_1
+		
+		;Spieler mit halben Feldern
+		MOV A, R7
+		ORL A, #10110110b
+		INC A
+		JZ INC_COUNTER_2
+		
+		MOV A, R6
+		ORL A, #10110110b
+		INC A
+		JZ INC_COUNTER_2
+	
+		MOV A, R5
+		ORL A, #10110110b
+		INC A
+		JZ INC_COUNTER_2
+	
+		LJMP CHECK_VERTICAL
+		
+	CHECK_VERTICAL:
+	;Senkrechte
+	;a: für Register R7, R6, R5 jeweils &-Verknüpfung #01X00000b; 
+	;b: schreibe Register nacheinander (R7 nach R5) in alu; xor mit #01X01X01 -> wenn ALU #00000000, dann add zählerstand
+	;c - das gleiche noch mit den anderen reihen dann #00X01X00, dann #00X00X01 &
+	
+		LJMP CHECK_DIAGONAL
+	
+		
+	
+	CHECK_DIAGONAL:
+	;Diagonale "/"
+	;a: R7 & #01000000, R6 & #00001000, R5 & #00000001
+	;b: |-Verknüpfung mit #10110110
+	;c: add 1, prüfe ob carry gesetzt wird, wenn dann add zählerstand
+	
+	;Diagonale "\"
+	;selbe, nur Register tauschen
+	
+	RET
+		
 
 
-;Diagonale "/"
-;a: R7 & #01000000, R6 & #00001000, R5 & #00000001
-;b: |-Verknüpfung mit #10110110
-;c: add 1, prüfe ob carry gesetzt wird, wenn dann add zählerstand
 
-;Diagonale "\"
-;selbe, nur Register tauschen
+INC_COUNTER_1:		; R4 beinhaltet Punktestand von S1 und S2: 0000 | 0000
+	INC R4
+	JMP MAIN_LOOP
+INC_COUNTER_2:
+	XCH A, R4
+	RL A
+	RL A
+	RL A
+	RL A
+	INC A
+	RL A
+	RL A
+	RL A
+	RL A
+	XCH A, R4
 
+	JMP MAIN_LOOP
 
+	
 DISPLAY_BOARD:
 	;-----------------------------------------------------------------------
 	    ; Zeige R7,R6,R5 nacheinander gemultiplext an
@@ -251,8 +314,8 @@ DISPLAY_BOARD:
 	display7:
 	    	setb P1.7
 
-
-		LJMP main_loop	
+		RET
+		;LJMP main_loop	
 
 
 
