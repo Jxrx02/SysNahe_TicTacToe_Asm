@@ -84,9 +84,9 @@ ON_INPUT:
 		JB P3.7, WRITE_PLAYER_2_INTO_FIELD
 		JNB P3.7, WRITE_PLAYER_1_INTO_FIELD
 		NACH_REGISTER_FÜLLEN1:
-		CPL P3.7
-		xch A,R2		; dopppelte Vertauschung notwendig!!
-		JBC CY,SUM_LOOP_3
+			CPL P3.7
+			xch A,R2		; dopppelte Vertauschung notwendig!!
+			JBC CY,SUM_LOOP_3
 		
 		JoaNhBinZuUnkreativ1:
 			xch A,R2		;tausche A mit R2
@@ -112,9 +112,9 @@ ON_INPUT:
 		JB P3.7, WRITE_PLAYER_2_INTO_FIELD2
 		JNB P3.7, WRITE_PLAYER_1_INTO_FIELD2
 		NACH_REGISTER_FÜLLEN2:
-		CPL P3.7
-		xch A,R2		
-		JBC CY,SUM_LOOP_6
+			CPL P3.7
+			xch A,R2		
+			JBC CY,SUM_LOOP_6
 
 		JoaNhBinZuUnkreativ2:
 			xch A,R2		
@@ -142,9 +142,9 @@ ON_INPUT:
 		JB P3.7, WRITE_PLAYER_2_INTO_FIELD3
 		JNB P3.7, WRITE_PLAYER_1_INTO_FIELD3
 		NACH_REGISTER_FÜLLEN3:
-		CPL P3.7
-		xch A,R2	
-		JBC CY,SUM_LOOP_9
+			CPL P3.7
+			xch A,R2	
+			JBC CY,SUM_LOOP_9
 
 		JoaNhBinZuUnkreativ3:
 			xch A,R2	
@@ -217,18 +217,18 @@ CHECK_FOR_WIN:
 		JZ INC_COUNTER_1
 		
 		;Spieler mit halben Feldern
-		MOV A, R7
-		ORL A, #10110110b
+		MOV A, R7			; exclusiv oder, da das vollständig gefüllte Feld die einfach gefüllten nicht überschreiben
+		XRL A, #10110110b
 		INC A
 		JZ INC_COUNTER_2
 		
 		MOV A, R6
-		ORL A, #10110110b
+		XRL A, #10110110b
 		INC A
 		JZ INC_COUNTER_2
 	
 		MOV A, R5
-		ORL A, #10110110b
+		XRL A, #10110110b
 		INC A
 		JZ INC_COUNTER_2
 	
@@ -252,9 +252,26 @@ CHECK_FOR_WIN:
 	;a: R7 & #01000000, R6 & #00001000, R5 & #00000001
 	;b: |-Verknüpfung mit #10110110
 	;c: add 1, prüfe ob carry gesetzt wird, wenn dann add zählerstand
+	MOV A, #11011011b	; testen
+	ORL A, R7	
+	ORL A, R6	
+	ORL A, R5
+	ORL A, #00100100b	; fülle Platzhalter
 	
-	;Diagonale "\"
-	;selbe, nur Register tauschen
+	INC A
+	JZ INC_COUNTER_1
+
+
+	;halbe Felder
+	;MOV A, #01001001b	; testen
+	ORL A, R7	
+	ORL A, R6	
+	ORL A, R5
+	ORL A, #10110110b	; fülle Platzhalter
+	
+	INC A
+	JZ INC_COUNTER_2
+
 	
 	RET
 		
