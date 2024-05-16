@@ -4,6 +4,8 @@
 ; Ausgabe: 8x8-LED-Matrix an P1, P2
 ;
 ; -------------------------------------------------
+
+
 ORG 0000H   ; Startadresse des Programms
 LJMP INIT_BOARD
 
@@ -86,6 +88,7 @@ ON_INPUT:
 		NACH_REGISTER_FÜLLEN1:
 			CPL P3.7
 			xch A,R2		; dopppelte Vertauschung notwendig!!
+			CLR AC
 			JBC CY,SUM_LOOP_3
 		
 		JoaNhBinZuUnkreativ1:
@@ -114,6 +117,7 @@ ON_INPUT:
 		NACH_REGISTER_FÜLLEN2:
 			CPL P3.7
 			xch A,R2		
+			CLR AC
 			JBC CY,SUM_LOOP_6
 
 		JoaNhBinZuUnkreativ2:
@@ -144,6 +148,7 @@ ON_INPUT:
 		NACH_REGISTER_FÜLLEN3:
 			CPL P3.7
 			xch A,R2	
+			CLR AC
 			JBC CY,SUM_LOOP_9
 
 		JoaNhBinZuUnkreativ3:
@@ -190,11 +195,16 @@ CLEAR_FIELD:
 	MOV R7, #00H
 	MOV R6, #00H
 	MOV R5, #00H
+	MOV R4, #00H
+	MOV R3, #00H
+	MOV R2, #00H
+	MOV R1, #00H
+	MOV R0, #00H
 	RETI
 
+	
 CHECK_FOR_WIN:
 	LJMP CHECK_HORIZONTAL
-
 	CHECK_HORIZONTAL:
 	;Waagerechte
 	;a: Für Spieler 2 (Ganzes Feld) für jedes Register (5-7), |-Verknüpfung mit 00100100, addiere 1 und prüfe ob Carry gesetzt wird, wenn Carry, dann add zählerstand
@@ -233,69 +243,132 @@ CHECK_FOR_WIN:
 		JZ INC_COUNTER_2
 	
 		LJMP CHECK_VERTICAL
+
+	;-----------------------------------------------------------------------
+	; JA DIE METHODENDEKLARATION IST HIER SUPER VERWIRREND.
+	; habe das hier hingepasted, da sonst die Adressen nicht gefunden werden, weil anscheinend die Postion der loop eine Rolle spielt.
+	; Wenn die Deklaration und der tatsächliche Aufruf zu weit auseinander stehen, dann findet er die Adresse nicht.... urgh. help. pls.
+	;-----------------------------------------------------------------------
+	INC_COUNTER_1:		; R4 beinhaltet Punktestand von S1 und S2: 0000 | 0000
+		INC R4
+		RET ;JMP MAIN_LOOP
+	INC_COUNTER_2:
+		XCH A, R4
+		RL A
+		RL A
+		RL A
+		RL A
+		INC A
+		RL A
+		RL A
+		RL A
+		RL A
+		XCH A, R4
+		RET
+		;JMP MAIN_LOOP
 		
 	CHECK_VERTICAL:
 	;Senkrechte
-	;a: für Register R7, R6, R5 jeweils &-Verknüpfung #01X00000b; 
-	;b: schreibe Register nacheinander (R7 nach R5) in alu; xor mit #01X01X01 -> wenn ALU #00000000, dann add zählerstand
-	;c - das gleiche noch mit den anderen reihen dann #00X01X00, dann #00X00X01 &
+	;a: für Register R7, R6, R5 jeweils &-Verknüpfung #11X00000b; 
+	;b: rotiere alu 2x
+	;c: fülle auf und addiere -> Carry -> Zählerstand
+	;linke reihe
 		MOV A, R7
-		
+		ANL A, #11000000b	; nur linke Reihe
+		RL A			; rotiere Alu 2x
+		RL A
 
-	
-		LJMP CHECK_DIAGONAL
-	
+		ORL A, R6
+		ANL A, #11000000b	; nur linke Reihe
+		RL A
+		RL A
+
+		ORL A, R5
+		ANL A, #11000000b	; nur linke Reihe
+		MOV B, A		; speichere Wert zwischen
+
+		XRL A, #00110000b	; fülle
+		INC A			; Zählerstand
+		JZ INC_COUNTER_1
+
+		XCH A,B
+		XRL A, #10111010b	; fülle				HOFFENTLICH STIMMT DIE BITMAP!!! help me!
+		INC A			; Zählerstand
+		JZ INC_COUNTER_2
 		
-	
+	; mittlere reihe
+		MOV A, R7
+		ANL A, #00011000b	; nur linke Reihe
+		RL A			; rotiere Alu 2x
+		RL A
+
+		ORL A, R6
+		ANL A, #00011000b	; nur linke Reihe
+		RL A
+		RL A
+
+		ORL A, R5
+		ANL A, #00011000b	; nur linke Reihe
+		MOV B, A		; speichere Wert zwischen
+
+		XRL A, #00000110b	; fülle
+		INC A			; Zählerstand
+		JZ INC_COUNTER_1
+
+		XCH A,B
+		XRL A, #01010111b	; fülle				HOFFENTLICH STIMMT DIE BITMAP!!! help me!
+		INC A			; Zählerstand
+		JZ INC_COUNTER_2
+
+	; rechte reihe
+		MOV A, R7
+		ANL A, #00000011b	; nur linke Reihe
+		RL A			; rotiere Alu 2x
+		RL A
+		ORL A, R6
+		ANL A, #00000011b	; nur linke Reihe
+		RL A
+		RL A
+		ORL A, R5
+		ANL A, #00000011b	; nur linke Reihe
+		MOV B, A		; speichere Wert zwischen
+		XRL A, #1100000b	; fülle
+		INC A			; Zählerstand
+		JZ INC_COUNTER_1
+		XCH A,B
+		XRL A, #11101010b	; fülle				HOFFENTLICH STIMMT DIE BITMAP!!! help me!
+		INC A			; Zählerstand
+		JZ INC_COUNTER_2
+		LJMP CHECK_DIAGONAL
+		
 	CHECK_DIAGONAL:
 	;Diagonale "/"
 	;a: R7 & #01000000, R6 & #00001000, R5 & #00000001
 	;b: |-Verknüpfung mit #10110110
 	;c: add 1, prüfe ob carry gesetzt wird, wenn dann add zählerstand
+	;MOV A, #11011011b	; testen
 
-	MOV A, #11011011b	; testen
-	ORL A, R7	
-	ORL A, R6	
-	ORL A, R5
-	ORL A, #00100100b	; fülle Platzhalter
+	;MOV A, R7	
+	;ORL A, R6	
+	;ORL A, R5
+	;ORL A, #00100100b	; fülle Platzhalter
 	
-	INC A
-	JZ INC_COUNTER_1
+	;INC A
+	;JZ INC_COUNTER_1
 
 
 	;halbe Felder
 	;MOV A, #01001001b	; testen
-	ORL A, R7	
-	ORL A, R6	
-	ORL A, R5
-	ORL A, #10110110b	; fülle Platzhalter
+	;ORL A, R7	
+	;ORL A, R6	
+	;ORL A, R5
+	;ORL A, #10110110b	; fülle Platzhalter
 	
-	INC A
-	JZ INC_COUNTER_2
+	;INC A
+	;JZ INC_COUNTER_2
 
 	
 	RET
-		
-
-
-
-INC_COUNTER_1:		; R4 beinhaltet Punktestand von S1 und S2: 0000 | 0000
-	INC R4
-	JMP MAIN_LOOP
-INC_COUNTER_2:
-	XCH A, R4
-	RL A
-	RL A
-	RL A
-	RL A
-	INC A
-	RL A
-	RL A
-	RL A
-	RL A
-	XCH A, R4
-
-	JMP MAIN_LOOP
 
 	
 DISPLAY_BOARD:
@@ -303,9 +376,6 @@ DISPLAY_BOARD:
 	    ; Zeige R7,R6,R5 nacheinander gemultiplext an
 	    ; R7, R6, R5 spiegeln das Feld wider, x die Eingabe aus R0 von Funktion ON_INPUT (Wird auch beim Mappen in der Funktion behandelt)
 	;-----------------------------------------------------------------------
-
-
-
     	MOV P1, #00000000b ;setze p1 standardgemäß auf 0
 	;display0:
 	    	MOV P2, R7
