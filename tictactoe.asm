@@ -10,10 +10,10 @@ LJMP INIT_BOARD
 ;-----------------------------------------------------------------------
 ;ISR 
 ;-----------------------------------------------------------------------
-ORG 0003H ; Einsprungsadresse von interrupt 3.2
+ORG 0003H ; Einsprungsadresse von Interrupt 3.2
 LJMP ON_INPUT
 
-ORG 0013H ; Einsprungsadresse von interrupt 3.3
+ORG 0013H ; Einsprungsadresse von Interrupt 3.3
 LJMP CLEAR_FIELD
 
 ;-----------------------------------------------------------------------
@@ -97,13 +97,13 @@ ON_INPUT:
 
 	SUM_LOOP_3:
 	  	xch A,R2
-		INC R2          	; Inkrementiere den Zählerwert für die nächste Iteration
-		RL A 		;rotiere akku um 3 Stellen je übertrag
+		INC R2          		;Inkrementiere den Zählerwert für die nächste Iteration
+		RL A 				;rotiere akku um 3 Stellen je übertrag
 		RL A 
 		RL A 
-		xch A,R2		;tausche A(kku) mit R2
-		JNZ SUM_LOOP_3  	; springe zurück zur Schleife, wenn r2 != 0
-		JZ JoaNhBinZuUnkreativ1
+		xch A,R2			;tausche A(kku) mit R2
+		JNZ SUM_LOOP_3  		;springe zurück zur Schleife, wenn r2 != 0
+		JZ JoaNhBinZuUnkreativ1		;sonst speichere Wert in R7
 		
 	;-----------------------------------------------------------------------
 	; 3 < x < 6
@@ -200,6 +200,7 @@ CHECK_FOR_WIN:
 	;a: Für Spieler 2 (Ganzes Feld) für jedes Register (5-7), |-Verknüpfung mit 00100100, addiere 1 und prüfe ob Carry gesetzt wird, wenn Carry, dann add zählerstand
 	;b: Für Spieler 1 vorher noch #10101010b mit or-verknüpfung, dann a: mit anderen zählerstand
 		;Spieler mit ganzen Feldern
+		;MOV R7, #01001001b	;zum Testen
 		MOV A, R7
 		ORL A, #00100100b
 		INC A
@@ -238,6 +239,9 @@ CHECK_FOR_WIN:
 	;a: für Register R7, R6, R5 jeweils &-Verknüpfung #01X00000b; 
 	;b: schreibe Register nacheinander (R7 nach R5) in alu; xor mit #01X01X01 -> wenn ALU #00000000, dann add zählerstand
 	;c - das gleiche noch mit den anderen reihen dann #00X01X00, dann #00X00X01 &
+		MOV A, R7
+		
+
 	
 		LJMP CHECK_DIAGONAL
 	
