@@ -274,72 +274,96 @@ CHECK_FOR_WIN:
 	;c: fülle auf und addiere -> Carry -> Zählerstand
 	;linke reihe
 		MOV A, R7
+		MOV B, #00h
 		ANL A, #11000000b	; nur linke Reihe
 		RL A			; rotiere Alu 2x
 		RL A
-
-		ORL A, R6
+		XCH A,B
+		
+		MOV A, R6
 		ANL A, #11000000b	; nur linke Reihe
+		ORL A, B
 		RL A
 		RL A
+		MOV B, #00h	;evtl nicht notwendig
+		XCH A,B
 
-		ORL A, R5
-		ANL A, #11000000b	; nur linke Reihe
-		MOV B, A		; speichere Wert zwischen
-
-		XRL A, #00110000b	; fülle
+		MOV A, R5
+		ANL A, #11000000b	; nur mittlere Reihe
+		ORL A, B		; speichere Wert in B zwischen
+		MOV B, A
+		
+		XRL A, #0011000b	; fülle
 		INC A			; Zählerstand
 		JZ INC_COUNTER_1
 
 		XCH A,B
 		XRL A, #10111010b	; fülle				HOFFENTLICH STIMMT DIE BITMAP!!! help me!
 		INC A			; Zählerstand
+		MOV B, #00h		; leere B
 		JZ INC_COUNTER_2
 		
 	; mittlere reihe
 		MOV A, R7
-		ANL A, #00011000b	; nur linke Reihe
+		MOV B, #00h
+		ANL A, #00011000b	; nur mittlere Reihe
 		RL A			; rotiere Alu 2x
 		RL A
-
-		ORL A, R6
-		ANL A, #00011000b	; nur linke Reihe
+		XCH A,B
+		
+		MOV A, R6
+		ANL A, #00011000b	; nur mittlere Reihe
+		ORL A, B
 		RL A
 		RL A
+		MOV B, #00h	;evtl nicht notwendig
+		XCH A,B
 
-		ORL A, R5
-		ANL A, #00011000b	; nur linke Reihe
-		MOV B, A		; speichere Wert zwischen
-
-		XRL A, #00000110b	; fülle
+		MOV A, R5
+		ANL A, #00011000b	; nur mittlere Reihe
+		ORL A, B		; speichere Wert in B zwischen
+		MOV B, A
+		
+		XRL A, #0000110b	; fülle
 		INC A			; Zählerstand
 		JZ INC_COUNTER_1
 
 		XCH A,B
 		XRL A, #01010111b	; fülle				HOFFENTLICH STIMMT DIE BITMAP!!! help me!
 		INC A			; Zählerstand
+		MOV B, #00h		; leere B
 		JZ INC_COUNTER_2
 
 	; rechte reihe
 		MOV A, R7
+		MOV B, #00h
 		ANL A, #00000011b	; nur linke Reihe
 		RL A			; rotiere Alu 2x
 		RL A
-		ORL A, R6
-		ANL A, #00000011b	; nur linke Reihe
-		RL A
-		RL A
-		ORL A, R5
-		ANL A, #00000011b	; nur linke Reihe
-		MOV B, A		; speichere Wert zwischen
-		XRL A, #1100000b	; fülle
-		INC A			; Zählerstand
-		JZ INC_COUNTER_1
 		XCH A,B
-		XRL A, #11101010b	; fülle				HOFFENTLICH STIMMT DIE BITMAP!!! help me!
-		INC A			; Zählerstand
+		
+		MOV A, R6
+		ANL A, #00000011b	; nur linke Reihe
+		ORL A, B
+		RL A
+		RL A
+		MOV B, #00h	
+		XCH A,B
+
+		MOV A, R5
+		ANL A, #00000011b	
+		ORL A, B		
+		MOV B, A
+		
+		XRL A, #11000000b	
+		INC A			
+		JZ INC_COUNTER_1
+
+		XCH A,B
+		XRL A, #11101010b	
+		INC A			
+		MOV B, #00h		
 		JZ INC_COUNTER_2
-		LJMP CHECK_DIAGONAL
 		
 	CHECK_DIAGONAL:
 	;Diagonale "/"
