@@ -265,8 +265,7 @@ CHECK_FOR_WIN:
 		RL A
 		XCH A, R4
 		RET
-		;JMP MAIN_LOOP
-		
+
 	CHECK_VERTICAL:
 	;Senkrechte
 	;a: für Register R7, R6, R5 jeweils &-Verknüpfung #11X00000b; 
@@ -357,40 +356,89 @@ CHECK_FOR_WIN:
 		
 		XRL A, #11000000b	
 		INC A			
-		JZ INC_COUNTER_1
+		JZ INC_COUNTER_1_
 
 		XCH A,B
 		XRL A, #11101010b	
 		INC A			
 		MOV B, #00h		
-		JZ INC_COUNTER_2
-		
+		JZ INC_COUNTER_2_
+		LJMP CHECK_DIAGONAL
+		;-----------------------------------------------------------------------
+	; JA DIE METHODENDEKLARATION IST HIER SUPER VERWIRREND.
+	; habe das hier hingepasted, da sonst die Adressen nicht gefunden werden, weil anscheinend die Postion der loop eine Rolle spielt.
+	; Wenn die Deklaration und der tatsächliche Aufruf zu weit auseinander stehen, dann findet er die Adresse nicht.... urgh. help. pls.
+	;-----------------------------------------------------------------------
+	INC_COUNTER_1_:		; R4 beinhaltet Punktestand von S1 und S2: 0000 | 0000
+		INC R4
+		RET ;JMP MAIN_LOOP
+	INC_COUNTER_2_:
+		XCH A, R4
+		RL A
+		RL A
+		RL A
+		RL A
+		INC A
+		RL A
+		RL A
+		RL A
+		RL A
+		XCH A, R4
+		RET	
 	CHECK_DIAGONAL:
+	;Diagonale "\"
+		MOV A, R7
+		MOV B, #00h
+		ANL A, #00000011b
+		XCH A,B
+		
+		MOV A, R6
+		ANL A, #00011000b	
+		ORL A, B
+		MOV B, #00h	
+		XCH A,B
+
+		MOV A, R5
+		ANL A, #11000000b	
+		ORL A, B		
+		MOV B, A
+		
+		XRL A, #00100100b	
+		INC A			
+		JZ INC_COUNTER_1_
+
+		XCH A,B
+		XRL A, #10110110b	
+		INC A			
+		MOV B, #00h		
+		JZ INC_COUNTER_2_
+
 	;Diagonale "/"
-	;a: R7 & #01000000, R6 & #00001000, R5 & #00000001
-	;b: |-Verknüpfung mit #10110110
-	;c: add 1, prüfe ob carry gesetzt wird, wenn dann add zählerstand
-	;MOV A, #11011011b	; testen
+		MOV A, R7
+		MOV B, #00h
+		ANL A, #11000000b
+		XCH A,B
+		
+		MOV A, R6
+		ANL A, #00011000b	
+		ORL A, B
+		MOV B, #00h	
+		XCH A,B
 
-	;MOV A, R7	
-	;ORL A, R6	
-	;ORL A, R5
-	;ORL A, #00100100b	; fülle Platzhalter
-	
-	;INC A
-	;JZ INC_COUNTER_1
+		MOV A, R5
+		ANL A, #00000011b	
+		ORL A, B		
+		MOV B, A
+		
+		XRL A, #00100100b	
+		INC A			
+		JZ INC_COUNTER_1_
 
-
-	;halbe Felder
-	;MOV A, #01001001b	; testen
-	;ORL A, R7	
-	;ORL A, R6	
-	;ORL A, R5
-	;ORL A, #10110110b	; fülle Platzhalter
-	
-	;INC A
-	;JZ INC_COUNTER_2
-
+		XCH A,B
+		XRL A, #10110110b	
+		INC A			
+		MOV B, #00h		
+		JZ INC_COUNTER_2_
 	
 	RET
 
