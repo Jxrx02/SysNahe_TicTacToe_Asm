@@ -195,11 +195,15 @@ CLEAR_FIELD:
 	MOV R7, #00H
 	MOV R6, #00H
 	MOV R5, #00H
-	MOV R4, #00H
 	MOV R3, #00H
 	MOV R2, #00H
 	MOV R1, #00H
 	MOV R0, #00H
+	; MOV R4, #00H
+	; Spielstand
+	MOV P0, R4
+	
+
 	RETI
 
 	
@@ -477,6 +481,8 @@ DISPLAY_BOARD:
 		JBC P1.6,display7
 	display7:
 	    	setb P1.7
+
+
 
 		RET
 		;LJMP main_loop	

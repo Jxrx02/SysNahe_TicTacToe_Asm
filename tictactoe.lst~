@@ -50,442 +50,447 @@ tictactoe                                                                       
                         49             ;-----------------------------------------------------------------------
                         50                 ; ON_INPUT: Wird P3.2 betätigt, so wird Port P0 (P0.0-P0.3) eingelesen -> liefert Dezimal
                         51             ;-----------------------------------------------------------------------
-002F 31E7               52             LCALL DISPLAY_BOARD
+002F 31E9               52             LCALL DISPLAY_BOARD
 0032 80FC               53             JMP MAIN_LOOP
                         54
                         55
                         56     ON_INPUT:
-0034 E580               57             MOV a, P0
-0036 540F               58             ANL a, #00FH ; bitweise &-Verknüpfung, um nur die letzten 4 Bits (P0.0-P0.3) auszuwerten
-0038 F8                 59             MOV R0, a
-                        60             ;-----------------------------------------------------------------------
-                        61                 ; Mappe Feld auf 8x8 Matrix
-                        62                 ; => R0 enthält den Wert des zu setztenden Feldes
-                        63             ;-----------------------------------------------------------------------
-                        64             ; x < 3
-0039 9403               65             SUBB A, #03h; Idee: Angenommen: Eingabe 8  soll auf Feld 8 (mitte unten) gemappt werden -> sc
-                        66                             ;bestimme die Mitte durch Bitshifts
-                        67                             ;
-                        68                             ; 8-3 >0; 5-3>0; 2-3 = -1 (^=n) Setze Carry oder wenn akku leer, springe auf
-003B 400E               69             JC LESS_THAN_3 ; x<3 -> schreibe in R7
-003D 600C               70             JZ LESS_THAN_3
-                        71
-                        72             ; 3 < x < 6
-003F 9403               73             SUBB A, #03h
-0041 4027               74             JC LESS_THAN_6 ; x<6 -> schreibe in R6
-0043 6025               75             JZ LESS_THAN_6
-                        76
-                        77             ; 6< x < 9
-0045 9403               78             SUBB A, #03h
-0047 4040               79             JC LESS_THAN_9 ; x<9 -> schreibe in R5
-0049 603E               80             JZ LESS_THAN_9
-                        81
-                        82             ; x < 3
-                        83             LESS_THAN_3:
-004B FA                 84                     MOV R2, A; register für zähler der foor loop
-                        85                     ; wenn Bit P3.7 gesetzt ist, so schreibe #00000001b (Spieler 2), ansonsten #00000011b
-004C 20B75D             86                     JB P3.7, WRITE_PLAYER_2_INTO_FIELD
-004F 30B756             87                     JNB P3.7, WRITE_PLAYER_1_INTO_FIELD
-                        88                     NACH_REGISTER_FÜLLEN1:
-0052 B2B7               89                             CPL P3.7
-0054 CA                 90                             xch A,R2                ; dopppelte Vertauschung notwendig!!
-0055 C2D6               91                             CLR AC
-0057 10D706             92                             JBC CY,SUM_LOOP_3
-                        93
-                        94                     JoaNhBinZuUnkreativ1:
-005A CA                 95                             xch A,R2                ;tausche A mit R2
-005B 6F                 96                             XRL A, R7               ;schreibe wert in TicTacToeFeld mit exclusiv-oder-Ver
-005C FF                 97                             MOV R7, A               ;speichere Wert in Register zwischen
-005D 11CE               98                             LCALL CHECK_FOR_WIN
-0060 32                 99                             RETI                    ;return from interupt; remove interrupt-bit
-                       100
-                       101             SUM_LOOP_3:
-0061 CA                102                     xch A,R2
-0062 0A                103                     INC R2                          ;Inkrementiere den Zählerwert für die nächste Iterati
-0063 23                104                     RL A                            ;rotiere akku um 3 Stellen je übertrag
-0064 23                105                     RL A
-0065 23                106                     RL A
-0066 CA                107                     xch A,R2                        ;tausche A(kku) mit R2
-0067 70F8              108                     JNZ SUM_LOOP_3                  ;springe zurück zur Schleife, wenn r2 != 0
-0069 60F0              109                     JZ JoaNhBinZuUnkreativ1         ;sonst speichere Wert in R7
-                       110
-                       111             ;-----------------------------------------------------------------------
-                       112             ; 3 < x < 6
-                       113             LESS_THAN_6:
-006B FA                114                     MOV R2, A
-006C 20B746            115                     JB P3.7, WRITE_PLAYER_2_INTO_FIELD2
-006F 30B73F            116                     JNB P3.7, WRITE_PLAYER_1_INTO_FIELD2
-                       117                     NACH_REGISTER_FÜLLEN2:
-0072 B2B7              118                             CPL P3.7
-0074 CA                119                             xch A,R2
-0075 C2D6              120                             CLR AC
-0077 10D706            121                             JBC CY,SUM_LOOP_6
-                       122
-                       123                     JoaNhBinZuUnkreativ2:
-007A CA                124                             xch A,R2
-007B 6E                125                             XRL A, R6
-007C FE                126                             MOV R6, A
-007D 11CE              127                             LCALL CHECK_FOR_WIN
-0080 32                128                             RETI
-                       129
-                       130             SUM_LOOP_6:
-0081 CA                131                     xch A,R2
-0082 0A                132                     INC R2
-0083 23                133                     RL A
-0084 23                134                     RL A
-0085 23                135                     RL A
-0086 CA                136                     xch A,R2
-0087 70F8              137                     JNZ SUM_LOOP_6
-0089 60F0              138                     JZ JoaNhBinZuUnkreativ2
-                       139
+0034 E5B0               57             MOV a, P3
+                        58
+0036 540F               59             ANL a, #00FH ; bitweise &-Verknüpfung, um nur die letzten 4 Bits (P0.0-P0.3) auszuwerten
+0038 F8                 60             MOV R0, a
+                        61             ;-----------------------------------------------------------------------
+                        62                 ; Mappe Feld auf 8x8 Matrix
+                        63                 ; => R0 enthält den Wert des zu setztenden Feldes
+                        64             ;-----------------------------------------------------------------------
+                        65             ; x < 3
+0039 9403               66             SUBB A, #03h; Idee: Angenommen: Eingabe 8  soll auf Feld 8 (mitte unten) gemappt werden -> sc
+                        67                             ;bestimme die Mitte durch Bitshifts
+                        68                             ;
+                        69                             ; 8-3 >0; 5-3>0; 2-3 = -1 (^=n) Setze Carry oder wenn akku leer, springe auf
+003B 400E               70             JC LESS_THAN_3 ; x<3 -> schreibe in R7
+003D 600C               71             JZ LESS_THAN_3
+                        72
+                        73             ; 3 < x < 6
+003F 9403               74             SUBB A, #03h
+0041 4027               75             JC LESS_THAN_6 ; x<6 -> schreibe in R6
+0043 6025               76             JZ LESS_THAN_6
+                        77
+                        78             ; 6< x < 9
+0045 9403               79             SUBB A, #03h
+0047 4040               80             JC LESS_THAN_9 ; x<9 -> schreibe in R5
+0049 603E               81             JZ LESS_THAN_9
+                        82
+                        83             ; x < 3
+                        84             LESS_THAN_3:
+004B FA                 85                     MOV R2, A; register für zähler der foor loop
+                        86                     ; wenn Bit P3.7 gesetzt ist, so schreibe #00000001b (Spieler 2), ansonsten #00000011b
+004C 20B75D             87                     JB P3.7, WRITE_PLAYER_2_INTO_FIELD
+004F 30B756             88                     JNB P3.7, WRITE_PLAYER_1_INTO_FIELD
+                        89                     NACH_REGISTER_FÜLLEN1:
+0052 B2B7               90                             CPL P3.7
+0054 CA                 91                             xch A,R2                ; dopppelte Vertauschung notwendig!!
+0055 C2D6               92                             CLR AC
+0057 10D706             93                             JBC CY,SUM_LOOP_3
+                        94
+                        95                     JoaNhBinZuUnkreativ1:
+005A CA                 96                             xch A,R2                ;tausche A mit R2
+005B 6F                 97                             XRL A, R7               ;schreibe wert in TicTacToeFeld mit exclusiv-oder-Ver
+005C FF                 98                             MOV R7, A               ;speichere Wert in Register zwischen
+005D 11CE               99                             LCALL CHECK_FOR_WIN
+0060 32                100                             RETI                    ;return from interupt; remove interrupt-bit
+                       101
+                       102             SUM_LOOP_3:
+0061 CA                103                     xch A,R2
+0062 0A                104                     INC R2                          ;Inkrementiere den Zählerwert für die nächste Iterati
+0063 23                105                     RL A                            ;rotiere akku um 3 Stellen je übertrag
+0064 23                106                     RL A
+0065 23                107                     RL A
+0066 CA                108                     xch A,R2                        ;tausche A(kku) mit R2
+0067 70F8              109                     JNZ SUM_LOOP_3                  ;springe zurück zur Schleife, wenn r2 != 0
+0069 60F0              110                     JZ JoaNhBinZuUnkreativ1         ;sonst speichere Wert in R7
+                       111
+                       112             ;-----------------------------------------------------------------------
+                       113             ; 3 < x < 6
+                       114             LESS_THAN_6:
+006B FA                115                     MOV R2, A
+006C 20B746            116                     JB P3.7, WRITE_PLAYER_2_INTO_FIELD2
+006F 30B73F            117                     JNB P3.7, WRITE_PLAYER_1_INTO_FIELD2
+                       118                     NACH_REGISTER_FÜLLEN2:
+0072 B2B7              119                             CPL P3.7
+0074 CA                120                             xch A,R2
+0075 C2D6              121                             CLR AC
+0077 10D706            122                             JBC CY,SUM_LOOP_6
+                       123
+                       124                     JoaNhBinZuUnkreativ2:
+007A CA                125                             xch A,R2
+007B 6E                126                             XRL A, R6
+007C FE                127                             MOV R6, A
+007D 11CE              128                             LCALL CHECK_FOR_WIN
+0080 32                129                             RETI
+                       130
+                       131             SUM_LOOP_6:
+0081 CA                132                     xch A,R2
+0082 0A                133                     INC R2
+0083 23                134                     RL A
+0084 23                135                     RL A
+0085 23                136                     RL A
+0086 CA                137                     xch A,R2
+0087 70F8              138                     JNZ SUM_LOOP_6
+0089 60F0              139                     JZ JoaNhBinZuUnkreativ2
                        140
                        141
-                       142             ;-----------------------------------------------------------------------
-                       143             ; 6< x < 9
-                       144             LESS_THAN_9:
-008B FA                145                     MOV R2, A
-008C 20B72F            146                     JB P3.7, WRITE_PLAYER_2_INTO_FIELD3
-008F 30B728            147                     JNB P3.7, WRITE_PLAYER_1_INTO_FIELD3
-                       148                     NACH_REGISTER_FÜLLEN3:
-0092 B2B7              149                             CPL P3.7
-0094 CA                150                             xch A,R2
-0095 C2D6              151                             CLR AC
-0097 10D706            152                             JBC CY,SUM_LOOP_9
-                       153
-                       154                     JoaNhBinZuUnkreativ3:
-009A CA                155                             xch A,R2
-009B 6D                156                             XRL A, R5
-009C FD                157                             MOV R5, A
-009D 11CE              158                             LCALL CHECK_FOR_WIN
-00A0 32                159                             RETI
-                       160
-                       161             SUM_LOOP_9:
-00A1 CA                162                     xch A,R2
-00A2 0A                163                     INC R2
-00A3 23                164                     RL A
-00A4 23                165                     RL A
-00A5 23                166                     RL A
-00A6 CA                167                     xch A,R2
-00A7 70F8              168                     JNZ SUM_LOOP_9
-00A9 60F0              169                     JZ JoaNhBinZuUnkreativ3
-                       170
-                       171     ; Das hier ist bisschen unschön, aber es muss zu der jeweiligen Adresse im 'IF' zurückgesprungen werd
-                       172     WRITE_PLAYER_1_INTO_FIELD:
-00AB 7403              173             MOV A, #00000011b
-00AD 80A6              174             JMP NACH_REGISTER_FÜLLEN1
-                       175     WRITE_PLAYER_2_INTO_FIELD:
-00AF 7401              176             MOV A, #00000001b
-00B1 80A2              177             JMP NACH_REGISTER_FÜLLEN1
-                       178
-                       179     WRITE_PLAYER_1_INTO_FIELD2:
-00B3 7403              180             MOV A, #00000011b
-00B5 80BD              181             JMP NACH_REGISTER_FÜLLEN2
-                       182     WRITE_PLAYER_2_INTO_FIELD2:
-00B7 7401              183             MOV A, #00000001b
-00B9 80B9              184             JMP NACH_REGISTER_FÜLLEN2
-                       185
-                       186     WRITE_PLAYER_1_INTO_FIELD3:
-00BB 7403              187             MOV A, #00000011b
-00BD 80D4              188             JMP NACH_REGISTER_FÜLLEN3
-                       189     WRITE_PLAYER_2_INTO_FIELD3:
-00BF 7401              190             MOV A, #00000001b
-00C1 80D0              191             JMP NACH_REGISTER_FÜLLEN3
-                       192
+                       142
+                       143             ;-----------------------------------------------------------------------
+                       144             ; 6< x < 9
+                       145             LESS_THAN_9:
+008B FA                146                     MOV R2, A
+008C 20B72F            147                     JB P3.7, WRITE_PLAYER_2_INTO_FIELD3
+008F 30B728            148                     JNB P3.7, WRITE_PLAYER_1_INTO_FIELD3
+                       149                     NACH_REGISTER_FÜLLEN3:
+0092 B2B7              150                             CPL P3.7
+0094 CA                151                             xch A,R2
+0095 C2D6              152                             CLR AC
+0097 10D706            153                             JBC CY,SUM_LOOP_9
+                       154
+                       155                     JoaNhBinZuUnkreativ3:
+009A CA                156                             xch A,R2
+009B 6D                157                             XRL A, R5
+009C FD                158                             MOV R5, A
+009D 11CE              159                             LCALL CHECK_FOR_WIN
+00A0 32                160                             RETI
+                       161
+                       162             SUM_LOOP_9:
+00A1 CA                163                     xch A,R2
+00A2 0A                164                     INC R2
+00A3 23                165                     RL A
+00A4 23                166                     RL A
+00A5 23                167                     RL A
+00A6 CA                168                     xch A,R2
+00A7 70F8              169                     JNZ SUM_LOOP_9
+00A9 60F0              170                     JZ JoaNhBinZuUnkreativ3
+                       171
+                       172     ; Das hier ist bisschen unschön, aber es muss zu der jeweiligen Adresse im 'IF' zurückgesprungen werd
+                       173     WRITE_PLAYER_1_INTO_FIELD:
+00AB 7403              174             MOV A, #00000011b
+00AD 80A6              175             JMP NACH_REGISTER_FÜLLEN1
+                       176     WRITE_PLAYER_2_INTO_FIELD:
+00AF 7401              177             MOV A, #00000001b
+00B1 80A2              178             JMP NACH_REGISTER_FÜLLEN1
+                       179
+                       180     WRITE_PLAYER_1_INTO_FIELD2:
+00B3 7403              181             MOV A, #00000011b
+00B5 80BD              182             JMP NACH_REGISTER_FÜLLEN2
+                       183     WRITE_PLAYER_2_INTO_FIELD2:
+00B7 7401              184             MOV A, #00000001b
+00B9 80B9              185             JMP NACH_REGISTER_FÜLLEN2
+                       186
+                       187     WRITE_PLAYER_1_INTO_FIELD3:
+00BB 7403              188             MOV A, #00000011b
+00BD 80D4              189             JMP NACH_REGISTER_FÜLLEN3
+                       190     WRITE_PLAYER_2_INTO_FIELD3:
+00BF 7401              191             MOV A, #00000001b
+00C1 80D0              192             JMP NACH_REGISTER_FÜLLEN3
                        193
-                       194     CLEAR_FIELD:
-00C3 7F00              195             MOV R7, #00H
-00C5 7E00              196             MOV R6, #00H
-00C7 7D00              197             MOV R5, #00H
-00C9 7C00              198             MOV R4, #00H
-00CB 7B00              199             MOV R3, #00H
-00CD 7A00              200             MOV R2, #00H
-00CF 7900              201             MOV R1, #00H
-00D1 7800              202             MOV R0, #00H
-00D3 32                203             RETI
-                       204
+                       194
+                       195     CLEAR_FIELD:
+00C3 7F00              196             MOV R7, #00H
+00C5 7E00              197             MOV R6, #00H
+00C7 7D00              198             MOV R5, #00H
+00C9 7C00              199             MOV R4, #00H
+00CB 7B00              200             MOV R3, #00H
+00CD 7A00              201             MOV R2, #00H
+00CF 7900              202             MOV R1, #00H
+00D1 7800              203             MOV R0, #00H
+00D3 32                204             RETI
                        205
-                       206     CHECK_FOR_WIN:
-00D4 8000              207             LJMP CHECK_HORIZONTAL
-                       208             CHECK_HORIZONTAL:
-                       209             ;Waagerechte
-                       210             ;a: Für Spieler 2 (Ganzes Feld) für jedes Register (5-7), |-Verknüpfung mit 00100100, addiere
-                       211             ;b: Für Spieler 1 vorher noch #10101010b mit or-verknüpfung, dann a: mit anderen zählerstand
-                       212                     ;Spieler mit ganzen Feldern
-                       213                     ;MOV R7, #01001001b     ;zum Testen
-00D7 EF                214                     MOV A, R7
-00D8 4424              215                     ORL A, #00100100b
-00DA 04                216                     INC A
-00DB 6020              217                     JZ INC_COUNTER_1
-                       218
-00DD EE                219                     MOV A, R6
-00DE 4424              220                     ORL A, #00100100b
-00E0 04                221                     INC A
-00E1 601A              222                     JZ INC_COUNTER_1
-                       223
-00E3 ED                224                     MOV A, R5
-00E4 4424              225                     ORL A, #00100100b
-00E6 04                226                     INC A
-00E7 6014              227                     JZ INC_COUNTER_1
-                       228
-                       229                     ;Spieler mit halben Feldern
-00E9 EF                230                     MOV A, R7                       ; exclusiv oder, da das vollständig gefüllte Feld die
-00EA 64B6              231                     XRL A, #10110110b
-00EC 04                232                     INC A
-00ED 6010              233                     JZ INC_COUNTER_2
-                       234
-00EF EE                235                     MOV A, R6
-00F0 64B6              236                     XRL A, #10110110b
-00F2 04                237                     INC A
-00F3 600A              238                     JZ INC_COUNTER_2
-                       239
-00F5 ED                240                     MOV A, R5
-00F6 64B6              241                     XRL A, #10110110b
-00F8 04                242                     INC A
-00F9 6004              243                     JZ INC_COUNTER_2
-                       244
-00FB 800E              245                     LJMP CHECK_VERTICAL
-                       246
-                       247             ;-----------------------------------------------------------------------
-                       248             ; JA DIE METHODENDEKLARATION IST HIER SUPER VERWIRREND.
-                       249             ; habe das hier hingepasted, da sonst die Adressen nicht gefunden werden, weil anscheinend di
-                       250             ; Wenn die Deklaration und der tatsächliche Aufruf zu weit auseinander stehen, dann findet er
-                       251             ;-----------------------------------------------------------------------
-                       252             INC_COUNTER_1:          ; R4 beinhaltet Punktestand von S1 und S2: 0000 | 0000
-00FE 0C                253                     INC R4
-00FF 22                254                     RET ;JMP MAIN_LOOP
-                       255             INC_COUNTER_2:
-0100 CC                256                     XCH A, R4
-0101 23                257                     RL A
-0102 23                258                     RL A
-0103 23                259                     RL A
-0104 23                260                     RL A
-0105 04                261                     INC A
-0106 23                262                     RL A
-0107 23                263                     RL A
-0108 23                264                     RL A
-0109 23                265                     RL A
-010A CC                266                     XCH A, R4
-010B 22                267                     RET
-                       268
-                       269             CHECK_VERTICAL:
-                       270             ;Senkrechte
-                       271             ;a: für Register R7, R6, R5 jeweils &-Verknüpfung #11X00000b;
-                       272             ;b: rotiere alu 2x
-                       273             ;c: fülle auf und addiere -> Carry -> Zählerstand
-                       274             ;linke reihe
-010C EF                275                     MOV A, R7
-010D 75F000            276                     MOV B, #00h
-0110 54C0              277                     ANL A, #11000000b       ; nur linke Reihe
-0112 23                278                     RL A                    ; rotiere Alu 2x
-0113 23                279                     RL A
-0114 C5F0              280                     XCH A,B
-                       281
-0116 EE                282                     MOV A, R6
-0117 54C0              283                     ANL A, #11000000b       ; nur linke Reihe
-0119 45F0              284                     ORL A, B
-011B 23                285                     RL A
-011C 23                286                     RL A
-011D 75F000            287                     MOV B, #00h     ;evtl nicht notwendig
-0120 C5F0              288                     XCH A,B
-                       289
-0122 ED                290                     MOV A, R5
-0123 54C0              291                     ANL A, #11000000b       ; nur mittlere Reihe
-0125 45F0              292                     ORL A, B                ; speichere Wert in B zwischen
-0127 F5F0              293                     MOV B, A
-                       294
-0129 6418              295                     XRL A, #0011000b        ; fülle
-012B 04                296                     INC A                   ; Zählerstand
-012C 60D0              297                     JZ INC_COUNTER_1
-                       298
-012E C5F0              299                     XCH A,B
-0130 64BA              300                     XRL A, #10111010b       ; fülle                         HOFFENTLICH STIMMT DIE BITMAP
-0132 04                301                     INC A                   ; Zählerstand
-0133 75F000            302                     MOV B, #00h             ; leere B
-0136 60C8              303                     JZ INC_COUNTER_2
-                       304
-                       305             ; mittlere reihe
-0138 EF                306                     MOV A, R7
-0139 75F000            307                     MOV B, #00h
-013C 5418              308                     ANL A, #00011000b       ; nur mittlere Reihe
-013E 23                309                     RL A                    ; rotiere Alu 2x
-013F 23                310                     RL A
-0140 C5F0              311                     XCH A,B
-                       312
-0142 EE                313                     MOV A, R6
-0143 5418              314                     ANL A, #00011000b       ; nur mittlere Reihe
-0145 45F0              315                     ORL A, B
-0147 23                316                     RL A
-0148 23                317                     RL A
-0149 75F000            318                     MOV B, #00h     ;evtl nicht notwendig
-014C C5F0              319                     XCH A,B
-                       320
-014E ED                321                     MOV A, R5
-014F 5418              322                     ANL A, #00011000b       ; nur mittlere Reihe
-0151 45F0              323                     ORL A, B                ; speichere Wert in B zwischen
-0153 F5F0              324                     MOV B, A
-                       325
-0155 6406              326                     XRL A, #0000110b        ; fülle
-0157 04                327                     INC A                   ; Zählerstand
-0158 60A4              328                     JZ INC_COUNTER_1
-                       329
-015A C5F0              330                     XCH A,B
-015C 6457              331                     XRL A, #01010111b       ; fülle                         HOFFENTLICH STIMMT DIE BITMAP
-015E 04                332                     INC A                   ; Zählerstand
-015F 75F000            333                     MOV B, #00h             ; leere B
-0162 609C              334                     JZ INC_COUNTER_2
-                       335
-                       336             ; rechte reihe
-0164 EF                337                     MOV A, R7
-0165 75F000            338                     MOV B, #00h
-0168 5403              339                     ANL A, #00000011b       ; nur linke Reihe
-016A 23                340                     RL A                    ; rotiere Alu 2x
-016B 23                341                     RL A
-016C C5F0              342                     XCH A,B
-                       343
-016E EE                344                     MOV A, R6
-016F 5403              345                     ANL A, #00000011b       ; nur linke Reihe
-0171 45F0              346                     ORL A, B
-0173 23                347                     RL A
-0174 23                348                     RL A
-0175 75F000            349                     MOV B, #00h
-0178 C5F0              350                     XCH A,B
-                       351
-017A ED                352                     MOV A, R5
-017B 5403              353                     ANL A, #00000011b
-017D 45F0              354                     ORL A, B
-017F F5F0              355                     MOV B, A
-                       356
-0181 64C0              357                     XRL A, #11000000b
-0183 04                358                     INC A
-0184 600A              359                     JZ INC_COUNTER_1_
-                       360
-0186 C5F0              361                     XCH A,B
-0188 64EA              362                     XRL A, #11101010b
-018A 04                363                     INC A
-018B 75F000            364                     MOV B, #00h
-018E 6002              365                     JZ INC_COUNTER_2_
-                       366
-                       367                     ;-----------------------------------------------------------------------
-                       368             ; JA DIE METHODENDEKLARATION IST HIER SUPER VERWIRREND.
-                       369             ; habe das hier hingepasted, da sonst die Adressen nicht gefunden werden, weil anscheinend di
-                       370             ; Wenn die Deklaration und der tatsächliche Aufruf zu weit auseinander stehen, dann findet er
-                       371             ;-----------------------------------------------------------------------
-                       372             INC_COUNTER_1_:         ; R4 beinhaltet Punktestand von S1 und S2: 0000 | 0000
-0190 0C                373                     INC R4
-0191 22                374                     RET ;JMP MAIN_LOOP
-                       375             INC_COUNTER_2_:
-0192 CC                376                     XCH A, R4
-0193 23                377                     RL A
-0194 23                378                     RL A
-0195 23                379                     RL A
-0196 23                380                     RL A
-0197 04                381                     INC A
-0198 23                382                     RL A
-0199 23                383                     RL A
-019A 23                384                     RL A
-019B 23                385                     RL A
-019C CC                386                     XCH A, R4
-019D 22                387                     RET
-                       388             CHECK_DIAGONAL:
-                       389             ;Diagonale ""
-019E EF                390                     MOV A, R7
-019F 75F000            391                     MOV B, #00h
-01A2 5403              392                     ANL A, #00000011b
-01A4 C5F0              393                     XCH A,B
-                       394
-01A6 EE                395                     MOV A, R6
-01A7 5418              396                     ANL A, #00011000b
-01A9 45F0              397                     ORL A, B
-01AB 75F000            398                     MOV B, #00h
-01AE C5F0              399                     XCH A,B
-                       400
-01B0 ED                401                     MOV A, R5
-01B1 54C0              402                     ANL A, #11000000b
-01B3 45F0              403                     ORL A, B
-01B5 F5F0              404                     MOV B, A
-                       405
-01B7 6424              406                     XRL A, #00100100b
-01B9 04                407                     INC A
-01BA 60D4              408                     JZ INC_COUNTER_1_
-                       409
-01BC C5F0              410                     XCH A,B
-01BE 64B6              411                     XRL A, #10110110b
-01C0 04                412                     INC A
-01C1 75F000            413                     MOV B, #00h
-01C4 60CC              414                     JZ INC_COUNTER_2_
-                       415
-                       416             ;Diagonale "/"
-01C6 EF                417                     MOV A, R7
-01C7 75F000            418                     MOV B, #00h
-01CA 54C0              419                     ANL A, #11000000b
-01CC C5F0              420                     XCH A,B
-                       421
-01CE EE                422                     MOV A, R6
-01CF 5418              423                     ANL A, #00011000b
-01D1 45F0              424                     ORL A, B
-01D3 75F000            425                     MOV B, #00h
-01D6 C5F0              426                     XCH A,B
-                       427
-01D8 ED                428                     MOV A, R5
-01D9 5403              429                     ANL A, #00000011b
-01DB 45F0              430                     ORL A, B
-01DD F5F0              431                     MOV B, A
-                       432
-01DF 6424              433                     XRL A, #00100100b
-01E1 04                434                     INC A
-01E2 60AC              435                     JZ INC_COUNTER_1_
-                       436
-01E4 C5F0              437                     XCH A,B
-01E6 64B6              438                     XRL A, #10110110b
-01E8 04                439                     INC A
-01E9 75F000            440                     MOV B, #00h
-01EC 60A4              441                     JZ INC_COUNTER_2_
-                       442
-01EE 22                443             RET
-                       444
+                       206
+                       207     CHECK_FOR_WIN:
+00D4 8000              208             LJMP CHECK_HORIZONTAL
+                       209             CHECK_HORIZONTAL:
+                       210             ;Waagerechte
+                       211             ;a: Für Spieler 2 (Ganzes Feld) für jedes Register (5-7), |-Verknüpfung mit 00100100, addiere
+                       212             ;b: Für Spieler 1 vorher noch #10101010b mit or-verknüpfung, dann a: mit anderen zählerstand
+                       213                     ;Spieler mit ganzen Feldern
+                       214                     ;MOV R7, #01001001b     ;zum Testen
+00D7 EF                215                     MOV A, R7
+00D8 4424              216                     ORL A, #00100100b
+00DA 04                217                     INC A
+00DB 6020              218                     JZ INC_COUNTER_1
+                       219
+00DD EE                220                     MOV A, R6
+00DE 4424              221                     ORL A, #00100100b
+00E0 04                222                     INC A
+00E1 601A              223                     JZ INC_COUNTER_1
+                       224
+00E3 ED                225                     MOV A, R5
+00E4 4424              226                     ORL A, #00100100b
+00E6 04                227                     INC A
+00E7 6014              228                     JZ INC_COUNTER_1
+                       229
+                       230                     ;Spieler mit halben Feldern
+00E9 EF                231                     MOV A, R7                       ; exclusiv oder, da das vollständig gefüllte Feld die
+00EA 64B6              232                     XRL A, #10110110b
+00EC 04                233                     INC A
+00ED 6010              234                     JZ INC_COUNTER_2
+                       235
+00EF EE                236                     MOV A, R6
+00F0 64B6              237                     XRL A, #10110110b
+00F2 04                238                     INC A
+00F3 600A              239                     JZ INC_COUNTER_2
+                       240
+00F5 ED                241                     MOV A, R5
+00F6 64B6              242                     XRL A, #10110110b
+00F8 04                243                     INC A
+00F9 6004              244                     JZ INC_COUNTER_2
+                       245
+00FB 800E              246                     LJMP CHECK_VERTICAL
+                       247
+                       248             ;-----------------------------------------------------------------------
+                       249             ; JA DIE METHODENDEKLARATION IST HIER SUPER VERWIRREND.
+                       250             ; habe das hier hingepasted, da sonst die Adressen nicht gefunden werden, weil anscheinend di
+                       251             ; Wenn die Deklaration und der tatsächliche Aufruf zu weit auseinander stehen, dann findet er
+                       252             ;-----------------------------------------------------------------------
+                       253             INC_COUNTER_1:          ; R4 beinhaltet Punktestand von S1 und S2: 0000 | 0000
+00FE 0C                254                     INC R4
+00FF 22                255                     RET ;JMP MAIN_LOOP
+                       256             INC_COUNTER_2:
+0100 CC                257                     XCH A, R4
+0101 23                258                     RL A
+0102 23                259                     RL A
+0103 23                260                     RL A
+0104 23                261                     RL A
+0105 04                262                     INC A
+0106 23                263                     RL A
+0107 23                264                     RL A
+0108 23                265                     RL A
+0109 23                266                     RL A
+010A CC                267                     XCH A, R4
+010B 22                268                     RET
+                       269
+                       270             CHECK_VERTICAL:
+                       271             ;Senkrechte
+                       272             ;a: für Register R7, R6, R5 jeweils &-Verknüpfung #11X00000b;
+                       273             ;b: rotiere alu 2x
+                       274             ;c: fülle auf und addiere -> Carry -> Zählerstand
+                       275             ;linke reihe
+010C EF                276                     MOV A, R7
+010D 75F000            277                     MOV B, #00h
+0110 54C0              278                     ANL A, #11000000b       ; nur linke Reihe
+0112 23                279                     RL A                    ; rotiere Alu 2x
+0113 23                280                     RL A
+0114 C5F0              281                     XCH A,B
+                       282
+0116 EE                283                     MOV A, R6
+0117 54C0              284                     ANL A, #11000000b       ; nur linke Reihe
+0119 45F0              285                     ORL A, B
+011B 23                286                     RL A
+011C 23                287                     RL A
+011D 75F000            288                     MOV B, #00h     ;evtl nicht notwendig
+0120 C5F0              289                     XCH A,B
+                       290
+0122 ED                291                     MOV A, R5
+0123 54C0              292                     ANL A, #11000000b       ; nur mittlere Reihe
+0125 45F0              293                     ORL A, B                ; speichere Wert in B zwischen
+0127 F5F0              294                     MOV B, A
+                       295
+0129 6418              296                     XRL A, #0011000b        ; fülle
+012B 04                297                     INC A                   ; Zählerstand
+012C 60D0              298                     JZ INC_COUNTER_1
+                       299
+012E C5F0              300                     XCH A,B
+0130 64BA              301                     XRL A, #10111010b       ; fülle                         HOFFENTLICH STIMMT DIE BITMAP
+0132 04                302                     INC A                   ; Zählerstand
+0133 75F000            303                     MOV B, #00h             ; leere B
+0136 60C8              304                     JZ INC_COUNTER_2
+                       305
+                       306             ; mittlere reihe
+0138 EF                307                     MOV A, R7
+0139 75F000            308                     MOV B, #00h
+013C 5418              309                     ANL A, #00011000b       ; nur mittlere Reihe
+013E 23                310                     RL A                    ; rotiere Alu 2x
+013F 23                311                     RL A
+0140 C5F0              312                     XCH A,B
+                       313
+0142 EE                314                     MOV A, R6
+0143 5418              315                     ANL A, #00011000b       ; nur mittlere Reihe
+0145 45F0              316                     ORL A, B
+0147 23                317                     RL A
+0148 23                318                     RL A
+0149 75F000            319                     MOV B, #00h     ;evtl nicht notwendig
+014C C5F0              320                     XCH A,B
+                       321
+014E ED                322                     MOV A, R5
+014F 5418              323                     ANL A, #00011000b       ; nur mittlere Reihe
+0151 45F0              324                     ORL A, B                ; speichere Wert in B zwischen
+0153 F5F0              325                     MOV B, A
+                       326
+0155 6406              327                     XRL A, #0000110b        ; fülle
+0157 04                328                     INC A                   ; Zählerstand
+0158 60A4              329                     JZ INC_COUNTER_1
+                       330
+015A C5F0              331                     XCH A,B
+015C 6457              332                     XRL A, #01010111b       ; fülle                         HOFFENTLICH STIMMT DIE BITMAP
+015E 04                333                     INC A                   ; Zählerstand
+015F 75F000            334                     MOV B, #00h             ; leere B
+0162 609C              335                     JZ INC_COUNTER_2
+                       336
+                       337             ; rechte reihe
+0164 EF                338                     MOV A, R7
+0165 75F000            339                     MOV B, #00h
+0168 5403              340                     ANL A, #00000011b       ; nur linke Reihe
+016A 23                341                     RL A                    ; rotiere Alu 2x
+016B 23                342                     RL A
+016C C5F0              343                     XCH A,B
+                       344
+016E EE                345                     MOV A, R6
+016F 5403              346                     ANL A, #00000011b       ; nur linke Reihe
+0171 45F0              347                     ORL A, B
+0173 23                348                     RL A
+0174 23                349                     RL A
+0175 75F000            350                     MOV B, #00h
+0178 C5F0              351                     XCH A,B
+                       352
+017A ED                353                     MOV A, R5
+017B 5403              354                     ANL A, #00000011b
+017D 45F0              355                     ORL A, B
+017F F5F0              356                     MOV B, A
+                       357
+0181 64C0              358                     XRL A, #11000000b
+0183 04                359                     INC A
+0184 600C              360                     JZ INC_COUNTER_1_
+                       361
+0186 C5F0              362                     XCH A,B
+0188 64EA              363                     XRL A, #11101010b
+018A 04                364                     INC A
+018B 75F000            365                     MOV B, #00h
+018E 6004              366                     JZ INC_COUNTER_2_
+0190 800E              367                     LJMP CHECK_DIAGONAL
+                       368                     ;-----------------------------------------------------------------------
+                       369             ; JA DIE METHODENDEKLARATION IST HIER SUPER VERWIRREND.
+                       370             ; habe das hier hingepasted, da sonst die Adressen nicht gefunden werden, weil anscheinend di
+                       371             ; Wenn die Deklaration und der tatsächliche Aufruf zu weit auseinander stehen, dann findet er
+                       372             ;-----------------------------------------------------------------------
+                       373             INC_COUNTER_1_:         ; R4 beinhaltet Punktestand von S1 und S2: 0000 | 0000
+0193 0C                374                     INC R4
+0194 22                375                     RET ;JMP MAIN_LOOP
+                       376             INC_COUNTER_2_:
+0195 CC                377                     XCH A, R4
+0196 23                378                     RL A
+0197 23                379                     RL A
+0198 23                380                     RL A
+0199 23                381                     RL A
+019A 04                382                     INC A
+019B 23                383                     RL A
+019C 23                384                     RL A
+019D 23                385                     RL A
+019E 23                386                     RL A
+019F CC                387                     XCH A, R4
+01A0 22                388                     RET
+                       389             CHECK_DIAGONAL:
+                       390             ;Diagonale ""
+01A1 EF                391                     MOV A, R7
+01A2 75F000            392                     MOV B, #00h
+01A5 5403              393                     ANL A, #00000011b
+01A7 C5F0              394                     XCH A,B
+                       395
+01A9 EE                396                     MOV A, R6
+01AA 5418              397                     ANL A, #00011000b
+01AC 45F0              398                     ORL A, B
+01AE 75F000            399                     MOV B, #00h
+01B1 C5F0              400                     XCH A,B
+                       401
+01B3 ED                402                     MOV A, R5
+01B4 54C0              403                     ANL A, #11000000b
+01B6 45F0              404                     ORL A, B
+01B8 F5F0              405                     MOV B, A
+                       406
+01BA 6424              407                     XRL A, #00100100b
+01BC 04                408                     INC A
+01BD 60D4              409                     JZ INC_COUNTER_1_
+                       410
+01BF C5F0              411                     XCH A,B
+01C1 64B6              412                     XRL A, #10110110b
+01C3 04                413                     INC A
+01C4 75F000            414                     MOV B, #00h
+01C7 60CC              415                     JZ INC_COUNTER_2_
+                       416
+                       417             ;Diagonale "/"
+01C9 EF                418                     MOV A, R7
+01CA 75F000            419                     MOV B, #00h
+01CD 54C0              420                     ANL A, #11000000b
+01CF C5F0              421                     XCH A,B
+                       422
+01D1 EE                423                     MOV A, R6
+01D2 5418              424                     ANL A, #00011000b
+01D4 45F0              425                     ORL A, B
+01D6 75F000            426                     MOV B, #00h
+01D9 C5F0              427                     XCH A,B
+                       428
+01DB ED                429                     MOV A, R5
+01DC 5403              430                     ANL A, #00000011b
+01DE 45F0              431                     ORL A, B
+01E0 F5F0              432                     MOV B, A
+                       433
+01E2 6424              434                     XRL A, #00100100b
+01E4 04                435                     INC A
+01E5 60AC              436                     JZ INC_COUNTER_1_
+                       437
+01E7 C5F0              438                     XCH A,B
+01E9 64B6              439                     XRL A, #10110110b
+01EB 04                440                     INC A
+01EC 75F000            441                     MOV B, #00h
+01EF 60A4              442                     JZ INC_COUNTER_2_
+                       443
+01F1 22                444             RET
                        445
-                       446     DISPLAY_BOARD:
-                       447             ;-----------------------------------------------------------------------
-                       448                 ; Zeige R7,R6,R5 nacheinander gemultiplext an
-                       449                 ; R7, R6, R5 spiegeln das Feld wider, x die Eingabe aus R0 von Funktion ON_INPUT (Wird au
-                       450             ;-----------------------------------------------------------------------
-01EF 759000            451             MOV P1, #00000000b ;setze p1 standardgemäß auf 0
-                       452             ;display0:
-01F2 8FA0              453                     MOV P2, R7
-01F4 D290              454                     setb P1.0
-01F6 109000            455                     JBC P1.0,display1
-                       456             display1:
-                       457                     ;MOV P2, R7
-01F9 D291              458                     setb P1.1
-01FB 109100            459                     JBC P1.1,display2
-                       460             display2:
-                       461                     ;MOV P2, #00000000b
-01FE D292              462                     setb P1.2
-0200 109200            463                     JBC P1.2,display3
-0203 8EA0              464             display3: MOV P2, R6
-0205 D293              465                     setb P1.3
-0207 109300            466                     JBC P1.3,display4
-                       467             display4:
-020A D294              468                     setb P1.4
-020C 109400            469                     JBC P1.4,display5
-                       470             display5:
-                       471                     ;MOV P2, #00000000b
-020F D295              472                     setb P1.5
-0211 109500            473                     JBC P1.5,display6
-                       474             display6:
-0214 8DA0              475                     MOV P2, R5
-0216 D296              476                     setb P1.6
-0218 109600            477                     JBC P1.6,display7
-                       478             display7:
-021B D297              479                     setb P1.7
-                       480
-021D 22                481                     RET
-                       482                     ;LJMP main_loop
-                       483
-                       484
+                       446
+                       447     DISPLAY_BOARD:
+                       448             ;-----------------------------------------------------------------------
+                       449                 ; Zeige R7,R6,R5 nacheinander gemultiplext an
+                       450                 ; R7, R6, R5 spiegeln das Feld wider, x die Eingabe aus R0 von Funktion ON_INPUT (Wird au
+                       451             ;-----------------------------------------------------------------------
+01F2 759000            452             MOV P1, #00000000b ;setze p1 standardgemäß auf 0
+                       453             ;display0:
+01F5 8FA0              454                     MOV P2, R7
+01F7 D290              455                     setb P1.0
+01F9 109000            456                     JBC P1.0,display1
+                       457             display1:
+                       458                     ;MOV P2, R7
+01FC D291              459                     setb P1.1
+01FE 109100            460                     JBC P1.1,display2
+                       461             display2:
+                       462                     ;MOV P2, #00000000b
+0201 D292              463                     setb P1.2
+0203 109200            464                     JBC P1.2,display3
+0206 8EA0              465             display3: MOV P2, R6
+0208 D293              466                     setb P1.3
+020A 109300            467                     JBC P1.3,display4
+                       468             display4:
+020D D294              469                     setb P1.4
+020F 109400            470                     JBC P1.4,display5
+                       471             display5:
+                       472                     ;MOV P2, #00000000b
+0212 D295              473                     setb P1.5
+0214 109500            474                     JBC P1.5,display6
+                       475             display6:
+0217 8DA0              476                     MOV P2, R5
+0219 D296              477                     setb P1.6
+021B 109600            478                     JBC P1.6,display7
+                       479             display7:
+021E D297              480                     setb P1.7
+                       481
+                       482
+                       483                     ; Spielstand
+0220 8C80              484                     MOV P0, R4
                        485
-                       486
-                       487     END
+0222 22                486                     RET
+                       487                     ;LJMP main_loop
+                       488
+                       489
+                       490
+                       491
+                       492     END
 ASSEMBLY COMPLETE, NO ERRORS FOUND, NO WARNINGS
 
 
@@ -532,7 +537,7 @@ CCF4 . . . . . . . . . . . . . . . .  B  ADDR  00DCH  NOT USED
 CCON . . . . . . . . . . . . . . . .  D  ADDR  00D8H  NOT USED
 CFINT. . . . . . . . . . . . . . . .  C  ADDR  0033H  NOT USED
 CH . . . . . . . . . . . . . . . . .  D  ADDR  00F9H  NOT USED
-CHECK_DIAGONAL . . . . . . . . . . .  C  ADDR  0196H  NOT USED
+CHECK_DIAGONAL . . . . . . . . . . .  C  ADDR  0198H
 CHECK_FOR_WIN. . . . . . . . . . . .  C  ADDR  00CEH
 CHECK_HORIZONTAL . . . . . . . . . .  C  ADDR  00D0H
 CHECK_VERTICAL . . . . . . . . . . .  C  ADDR  0104H
@@ -548,14 +553,14 @@ CPRL2. . . . . . . . . . . . . . . .  B  ADDR  00C8H  NOT USED
 CR . . . . . . . . . . . . . . . . .  B  ADDR  00DEH  NOT USED
 CT2. . . . . . . . . . . . . . . . .  B  ADDR  00C9H  NOT USED
 CY . . . . . . . . . . . . . . . . .  B  ADDR  00D7H
-DISPLAY1 . . . . . . . . . . . . . .  C  ADDR  01F1H
-DISPLAY2 . . . . . . . . . . . . . .  C  ADDR  01F6H
-DISPLAY3 . . . . . . . . . . . . . .  C  ADDR  01FBH
-DISPLAY4 . . . . . . . . . . . . . .  C  ADDR  0202H
-DISPLAY5 . . . . . . . . . . . . . .  C  ADDR  0207H
-DISPLAY6 . . . . . . . . . . . . . .  C  ADDR  020CH
-DISPLAY7 . . . . . . . . . . . . . .  C  ADDR  0213H
-DISPLAY_BOARD. . . . . . . . . . . .  C  ADDR  01E7H
+DISPLAY1 . . . . . . . . . . . . . .  C  ADDR  01F3H
+DISPLAY2 . . . . . . . . . . . . . .  C  ADDR  01F8H
+DISPLAY3 . . . . . . . . . . . . . .  C  ADDR  01FDH
+DISPLAY4 . . . . . . . . . . . . . .  C  ADDR  0204H
+DISPLAY5 . . . . . . . . . . . . . .  C  ADDR  0209H
+DISPLAY6 . . . . . . . . . . . . . .  C  ADDR  020EH
+DISPLAY7 . . . . . . . . . . . . . .  C  ADDR  0215H
+DISPLAY_BOARD. . . . . . . . . . . .  C  ADDR  01E9H
 DP0H . . . . . . . . . . . . . . . .  D  ADDR  0083H  NOT USED
 DP0L . . . . . . . . . . . . . . . .  D  ADDR  0082H  NOT USED
 DP1H . . . . . . . . . . . . . . . .  D  ADDR  0085H  NOT USED
@@ -581,9 +586,9 @@ IE . . . . . . . . . . . . . . . . .  D  ADDR  00A8H  NOT USED
 IE0. . . . . . . . . . . . . . . . .  B  ADDR  0089H  NOT USED
 IE1. . . . . . . . . . . . . . . . .  B  ADDR  008BH  NOT USED
 INC_COUNTER_1. . . . . . . . . . . .  C  ADDR  00F6H
-INC_COUNTER_1_ . . . . . . . . . . .  C  ADDR  0188H
+INC_COUNTER_1_ . . . . . . . . . . .  C  ADDR  018AH
 INC_COUNTER_2. . . . . . . . . . . .  C  ADDR  00F8H
-INC_COUNTER_2_ . . . . . . . . . . .  C  ADDR  018AH
+INC_COUNTER_2_ . . . . . . . . . . .  C  ADDR  018CH
 INIT_BOARD . . . . . . . . . . . . .  C  ADDR  0015H
 INT0 . . . . . . . . . . . . . . . .  B  ADDR  00B2H  NOT USED
 INT1 . . . . . . . . . . . . . . . .  B  ADDR  00B3H  NOT USED
