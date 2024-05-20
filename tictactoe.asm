@@ -201,7 +201,7 @@ CLEAR_FIELD:
 	MOV R0, #00H
 	; MOV R4, #00H
 	; Spielstand
-	MOV P0, R4
+	; MOV P0, R4
 	
 
 	RETI
